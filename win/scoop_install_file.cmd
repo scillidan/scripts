@@ -1,0 +1,1 @@
+scoop install "%CD%\bucket\%*.json"

@@ -3,9 +3,9 @@
 setlocal
 
 rem Custom user environment variables here
-set "MPVC_VIDEO=%USERHOME%\Usr\Data\mpvc_video"
-set "MPVC_MUSIC=%USERHOME%\Usr\Data\mpvc_music"
-set "MPVC_MANGA=%USERHOME%\Usr\Data\mpvc_manga"
+set "MPVC_VIDEO=%USERHOME%\Local\Data\mpvc_video"
+set "MPVC_MUSIC=%USERHOME%\Local\Data\mpvc_music"
+set "MPVC_MANGA=%USERHOME%\Local\Data\mpvc_manga"
 
 set "config=%1"
 

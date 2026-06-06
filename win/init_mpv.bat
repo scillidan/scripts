@@ -8,13 +8,13 @@ setlocal
 
 set "MPV_DATA=%SCOOP%\apps\mpv\current\portable_config"
 rem Custom user environment variables here
-set "MPV_CONF=%USERHOME%\Usr\Git\dotfiles\.config\_mpv"
-set "MPV_SRC=%USERHOME%\Usr\Source\mpv"
-set "MPV_DL=%USERHOME%\Usr\Download\mpv"
+set "MPV_CONF=%USERHOME%\Share\dotfiles\.config\_mpv"
+set "MPV_SRC=%USERHOME%\Local\Source\mpv"
+set "MPV_DL=%USERHOME%\Local\Download\mpv"
 
-set "MPVC_VIDEO=%USERHOME%\Usr\Data\mpvc_video"
-set "MPVC_MANGA=%USERHOME%\Usr\Data\mpvc_manga"
-set "MPVC_MUSIC=%USERHOME%\Usr\Data\mpvc_music"
+set "MPVC_VIDEO=%USERHOME%\Local\Data\mpvc_video"
+set "MPVC_MANGA=%USERHOME%\Local\Data\mpvc_manga"
+set "MPVC_MUSIC=%USERHOME%\Local\Data\mpvc_music"
 set "MPVC_ALL=%MPVC_GLOBAL% %MPVC_VIDEO% %MPVC_MANGA% %MPVC_MUSIC%"
 for %%d in (%MPVC_ALL%) do (
     rmdir /S /Q "%%d"

@@ -10,11 +10,9 @@ file="$1"
 ext="${file##*.}"
 ext=".${ext}"
 tmp_img="/tmp/_fzf_preview_$$"
-if [[ -n "$WEZTERM_PANE" || "$TERM" =~ sixel ]]; then
-    img_preview="chafa -f sixel --animate=off --clear --size x25"
-else
-    img_preview="chafa -f symbols --animate=off --clear --size x25"
-fi
+chafa="chafa -f symbols --animate=off --clear --size x25"
+img_preview=$chafa
+
 
 preview_image() {
     $img_preview "$file"
@@ -39,12 +37,16 @@ preview_epub() {
     rm -f "${tmp_img}.png"
 }
 
+preview_md() {
+    CLICOLOR_FORCE=1 glow --style dark "$file" 2>/dev/null || cat "$file"
+}
+
 preview_csv() {
     xan view "$file" 2>/dev/null || cat "$file"
 }
 
-preview_md() {
-    CLICOLOR_FORCE=1 glow --style dark "$file" 2>/dev/null || cat "$file"
+preview_log() {
+    tspin -p "$file" 2>/dev/null || cat "$file"
 }
 
 preview_text() {
@@ -64,11 +66,14 @@ case "${ext,,}" in
     .epub)
         preview_epub
         ;;
+    .md)
+        preview_md
+        ;;
     .csv)
         preview_csv
         ;;
-    .md)
-        preview_md
+    .log)
+        preview_log
         ;;
     *)
         preview_text
