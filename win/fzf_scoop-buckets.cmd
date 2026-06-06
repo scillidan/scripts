@@ -1,0 +1,1 @@
+rg --type json "description" "%SCOOP%\buckets\main\bucket" "%SCOOP%\buckets\Extras\bucket" "%SCOOP%\buckets\Nonportable\bucket" "%SCOOP%\buckets\Versions\bucket" "%SCOOP%\buckets\scoop-games\bucket" | sd "C:\\Users\\User\\Scoop\\buckets\\\\" "" | sd ".json:    \"description\":" "" | sd ",\s*$" "" | fzf --exact
