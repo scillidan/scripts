@@ -1,5 +1,8 @@
-#NoEnv
-SetWorkingDir %A_ScriptDir%
+; git clone https://github.com/iseahound/Vis2
+; cd Vis2
+; autohotkeyu64 vis2-eng.ahk
+
+#include <Vis2>
 
 Menu, Tray, DeleteAll
 Menu, Tray, Icon, assets\icon.ico
@@ -20,8 +23,4 @@ ToggleStartup:
     }
 return
 
-^!+c::
-    Send, ^c
-    Sleep, 100
-    Run, wezterm-gui start bash _pylanguagetool.sh --api-url "http://localhost:8040/v2/"
-    return
+^!o:: OCR(, "eng")

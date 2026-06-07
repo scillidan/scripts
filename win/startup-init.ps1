@@ -27,7 +27,6 @@ $lnkPath = @(
 )
 
 $binPath = @(
-    @{ Path = "$env:USERHOME\Share\scripts\win\startup-ahks.cmd"; Arguments = ""; WorkingDir = "" }
     # @{ Path = "$env:LOCALAPPDATA\Microsoft\WindowsApps\Snipaste.exe"; Arguments = ""; WorkingDir = "" }
     # @{ Path = "$env:ProgramFiles\Clash Verge\clash-verge.exe"; Arguments = ""; WorkingDir = "" }
 )
