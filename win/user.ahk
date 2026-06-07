@@ -2,14 +2,12 @@
 SetWorkingDir %A_ScriptDir%
 
 Menu, Tray, DeleteAll
+Menu, Tray, Icon, assets\icon.ico
 RegRead, isStartup, HKCU\Software\Microsoft\Windows\CurrentVersion\Run, UserAHK
+Menu, Tray, Add
 Menu, Tray, Add, Start with Windows, ToggleStartup
 if (isStartup != "")
     Menu, Tray, Check, Start with Windows
-Menu, Tray, Add, Edit Config, EditConfig
-Menu, Tray, Add
-Menu, Tray, Add, Reload, ReloadApp
-Menu, Tray, Add, Exit, ExitScript
 
 ToggleStartup:
     RegRead, startupValue, HKCU\Software\Microsoft\Windows\CurrentVersion\Run, UserAHK
@@ -20,18 +18,6 @@ ToggleStartup:
         RegDelete, HKCU\Software\Microsoft\Windows\CurrentVersion\Run, UserAHK
         Menu, Tray, Uncheck, Start with Windows
     }
-return
-
-EditConfig:
-    Run, edit "%A_ScriptFullPath%"
-return
-
-ReloadApp:
-    Reload
-return
-
-ExitScript:
-    ExitApp
 return
 
 ^!+c::

@@ -19,7 +19,7 @@ VENV_CMD="pylanguagetool --input-type html --lang en-US -c"
 case "$OSTYPE" in
     linux-gnu*)
         # Fill the path
-        BASE_DIR="$HOME/Usr/Shell/$VENV_DIR"
+        BASE_DIR="$HOME/Local/Shell/$VENV_DIR"
         VENV_ACT="./bin/activate"
         ;;
     msys|cygwin)

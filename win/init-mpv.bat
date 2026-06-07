@@ -8,7 +8,7 @@ setlocal
 
 set "MPV_DATA=%SCOOP%\apps\mpv\current\portable_config"
 rem Custom user environment variables here
-set "MPV_CONF=%USERHOME%\Share\dotfiles\.config\_mpv"
+set "MPV_CONF=%USERHOME%\Share\dotfiles\.config\mpv"
 set "MPV_SRC=%USERHOME%\Local\Source\mpv"
 set "MPV_DL=%USERHOME%\Local\Download\mpv"
 
