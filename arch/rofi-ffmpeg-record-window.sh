@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Record a selected window with optional audio.
 # Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 # Dependences: wmctrl, rofi, xwininfo, ffmpeg

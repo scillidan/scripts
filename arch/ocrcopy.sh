@@ -1,8 +1,8 @@
 #!/bin/bash
-# Write by GPT-4o mini🧙‍♂️, scillidan🤡
+
 # Capture a screenshot, perform OCR, and copy the result to clipboard.
+# Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 # Dependences: scrot, imagemagick, tesseract, xclip, dunst
-# Usage: ./script.sh
 
 set -euo pipefail
 

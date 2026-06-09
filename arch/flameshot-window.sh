@@ -1,5 +1,6 @@
 #!/bin/bash
-## https://github.com/flameshot-org/flameshot/issues/5
+
+# https://github.com/flameshot-org/flameshot/issues/5
 
 TMP_WINDOW_ID=$(xdotool selectwindow)
 unset WINDOW X Y WIDTH HEIGHT SCREEN

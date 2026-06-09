@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Personal setup script
 
 PEGASUS_HOME="$HOME/<path_to>/pegasus"

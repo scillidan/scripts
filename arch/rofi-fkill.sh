@@ -1,8 +1,8 @@
 #!/bin/bash
+
 # Select and kill processes with rofi.
 # Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 # Dependences: ps, sed, rofi, awk, kill
-# Usage: ./script.sh
 
 # List all processes except header line
 lines=$(ps -ef | sed 1d)
