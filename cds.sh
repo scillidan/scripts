@@ -45,17 +45,26 @@ get_abs_path() {
     fi
 }
 
+wezterm_only() {
+    exec bash -c "cd '$1' && exec $TOOL"
+}
+
 wezterm_first() {
-    if wezterm cli list >/dev/null 2>&1; then
-        wezterm cli spawn --cwd "$1" -- bash -c "$TOOL"
-    else
-        wezterm-gui start --cwd "$1" -- bash -c "$TOOL"
-    fi
+    wezterm cli spawn --cwd "$1" -- bash -c "$TOOL"
 }
 
 wezterm_next() {
     sleep 0.5
     wezterm cli spawn --cwd "$1" -- bash -c "$TOOL"
+    wezterm cli activate-tab --tab-relative -1
+}
+
+tmux_only() {
+    if tmux has-session 2>/dev/null; then
+        exec tmux new-window -c "$1" "$TOOL"
+    else
+        exec tmux new-session -s cds -c "$1" "$TOOL"
+    fi
 }
 
 tmux_first() {
@@ -74,8 +83,14 @@ tmux_next() {
 
 open_in_tabs() {
     local backend="$1"
-    local first=true
 
+    if [[ ${#PATHS[@]} -eq 1 ]]; then
+        ABS_PATH=$(get_abs_path "${PATHS[0]}") || return 1
+        "${backend}_only" "$ABS_PATH"
+        return
+    fi
+
+    local first=true
     for path in "${PATHS[@]}"; do
         ABS_PATH=$(get_abs_path "$path") || continue
 

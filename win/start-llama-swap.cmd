@@ -1,0 +1,1 @@
+llama-swap -config %USERHOME%\Share\dotfiles\.config\llama-swap\config.yaml -listen 127.0.0.1:8010
