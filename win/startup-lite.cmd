@@ -1,6 +1,6 @@
-start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\AltBacktick.lnk"
-timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Ditto.lnk"
+timeout /t 1 /nobreak >nul
+start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Espanso.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\GoldenDict.lnk"
 timeout /t 1 /nobreak >nul
@@ -15,3 +15,5 @@ timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\RectangleWin.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\virgo.lnk"
+timeout /t 1 /nobreak >nul
+start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Window Switcher.lnk"
