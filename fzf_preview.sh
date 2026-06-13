@@ -1,6 +1,4 @@
 #!/bin/bash
-# Preview files for fzf
-# Dependences: chafa, ffmpeg, mediainfo, pdftoppm, epub-thumbnailer, bat
 
 set -euo pipefail
 

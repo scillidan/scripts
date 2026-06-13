@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Get SHA256 hash from files and copy to clipboard
 #
 # Usage:

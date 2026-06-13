@@ -1,6 +1,7 @@
-; git clone https://github.com/iseahound/Vis2
-; cd Vis2
-; autohotkeyu64 vis2-eng.ahk
+; Usage:
+;   git clone https://github.com/iseahound/Vis2
+;   cd Vis2
+;   autohotkeyu64 vis2-eng.ahk
 
 #include <Vis2>
 

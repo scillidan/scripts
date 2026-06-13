@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Remove cover art (APIC) from MP3 files while preserving all other metadata
 #
 # Usage:

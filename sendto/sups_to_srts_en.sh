@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert English PGS files to SRT format
 #
 # Notes:

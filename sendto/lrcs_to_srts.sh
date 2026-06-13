@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert LRC files to SRT format
 #
 # Usage:

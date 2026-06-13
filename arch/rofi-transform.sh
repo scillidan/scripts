@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#
 # Base on https://github.com/scillidan/Keypirinha-PuzzTools/blob/main/transforms.py
 # Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 

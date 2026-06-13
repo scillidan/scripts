@@ -8,7 +8,12 @@
 # ///
 
 # llm_trans - Local LLM translator via llama.cpp server
-# Authors: GLM-5🧙‍♂️, scillidan🤡
+# Inspired by https://ollama.com/zongwei/gemma3-translator:4b
+# Authors: GLM-5.1🧙‍♂️, scillidan🤡
+#
+# Tested models:
+#   https://huggingface.co/unsloth/gemma-3-4b-it-qat-GGUF
+#   https://huggingface.co/unsloth/gemma-3-12b-it-GGUF
 #
 # Usage:
 #   # Auto mode (detect language, match direction rules)
@@ -271,12 +276,8 @@ def format_html(translated, original=None):
     return "".join(parts)
 
 
-def emit(text, utf16=False):
-    if utf16:
-        sys.stdout.buffer.write(text.encode("utf-16", errors="replace"))
-        sys.stdout.buffer.flush()
-    else:
-        print(text)
+def emit(text):
+    print(text)
 
 
 def main():
@@ -292,7 +293,7 @@ def main():
     parser.add_argument("--model", type=str, required=True, help="Model name sent to server")
     parser.add_argument("--prompt", type=str, default="quick", choices=list(PROMPTS.keys()), help="Prompt preset (default: quick)")
     parser.add_argument("--timeout", type=int, default=30, help="Request timeout in seconds")
-    parser.add_argument("--utf16", action="store_true", help="Output in UTF-16 encoding")
+
     parser.add_argument("--html", action="store_true", help="Output in HTML format")
     parser.add_argument("--stdin", action="store_true", help="Read input from stdin")
     parser.add_argument("--original-text", action="store_true", help="Append original text")
@@ -366,7 +367,7 @@ def main():
         if args.original_text:
             output += f"\n{input_text}"
 
-    emit(output, args.utf16)
+    emit(output)
 
 
 if __name__ == "__main__":

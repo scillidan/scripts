@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert SRT files to VTT format
 #
 # Usage:

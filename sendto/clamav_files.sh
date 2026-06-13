@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Scan files and dirs with ClamAV
 #
 # Usage:

@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert image files to JPEG format, delete original if conversion succeeded
 #
 # Usage:

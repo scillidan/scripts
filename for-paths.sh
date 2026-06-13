@@ -1,8 +1,6 @@
 #!/bin/sh
-
-# Author: scillidan
-# License: MIT
-# Description: Execute command on multiple files with path normalization
+# Execute command on multiple files with path normalization
+# Authors: GLM-5🧙‍♂️, scillidan🤡
 #
 # Usage:
 #   paths.sh <command> [file1] [file2] ...

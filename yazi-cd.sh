@@ -1,5 +1,5 @@
 #!/bin/bash
-## https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
+# https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
 
 tmpfile="${TEMP}/yazi-cwd.$$"
 

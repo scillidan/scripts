@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # Select and kill processes with rofi.
 # Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 # Dependences: ps, sed, rofi, awk, kill

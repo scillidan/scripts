@@ -1,6 +1,5 @@
 #!/bin/bash
 # Open files with appropriate applications or copy to clipboard for fzf
-# Usage: fzf_open.sh <file> [<file2> ...]
 
 set -euo pipefail
 

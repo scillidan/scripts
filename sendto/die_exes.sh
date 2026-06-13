@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Open files with Detect It Easy (DiE)
 #
 # Usage:

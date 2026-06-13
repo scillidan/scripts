@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Create an M3U playlist from files
 #
 # Usage:

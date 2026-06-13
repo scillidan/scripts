@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Generate thumbnails (screenshots) from video files
 #
 # Usage:

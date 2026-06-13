@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Capture a screenshot, perform OCR, and copy the result to clipboard.
 # Authors: GPT-4o mini🧙‍♂️, scillidan🤡
 # Dependences: scrot, imagemagick, tesseract, xclip, dunst

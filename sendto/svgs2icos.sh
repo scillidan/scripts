@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert SVG files to multi-size ICO icons
 #
 # Usage:

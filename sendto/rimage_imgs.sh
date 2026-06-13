@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Optimize and resize images using Rimage
 #
 # Usage:

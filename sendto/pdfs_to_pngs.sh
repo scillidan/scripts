@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert PDF pages to PNG format
 #
 # Usage:

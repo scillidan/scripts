@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Optimize images using yoga and ImageMagick
 #
 # Usage:

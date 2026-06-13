@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert PNG/BMP/GIF/JPG/SVG files to multi-resolution ICO format
 #
 # Usage:

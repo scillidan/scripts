@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Generate animated video contact sheets
 #
 # Usage:

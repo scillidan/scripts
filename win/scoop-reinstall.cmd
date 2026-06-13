@@ -1,0 +1,1 @@
+scoop uninstall %1 && scoop install %1

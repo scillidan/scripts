@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert multi-line subtitle content to single line
 #
 # Usage:

@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Convert TTF to WOFF and WOFF2 format
 #
 # Usage:

@@ -1,8 +1,6 @@
 #!/bin/bash
-
+# CDs - cd dirs, spawn tool
 # Authors: GLM-5🧙‍♂️, Hy3-preview🧙‍♂️ scillidan🤡
-# License: MIT
-# Description: CDs - cd dirs, spawn tool
 # Usage: cds.sh <command> [paths...]
 # Examples:
 #   cds.sh lazygit
