@@ -36,7 +36,7 @@ SET "PATH=%PATH%;%MSYS2_ROOT%\mingw64\bin"
 rem SET "PATH=%PATH%;%MSYS2_ROOT%\usr\bin\site_perl"
 rem SET "PATH=%PATH%;%MSYS2_ROOT%\usr\bin\vendor_perl"
 
-"%MSYS2_ROOT%\msys2_shell.cmd" ^
+"%SCOOP%\apps\msys2\current\msys2_shell.cmd" ^
   -%MSYS2_ENV% ^
   -defterm ^
   -here ^
