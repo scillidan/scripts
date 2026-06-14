@@ -5,25 +5,25 @@
 # ]
 # ///
 
-# pylanguagetool_goldendict - LanguageTool API wrapper for GoldenDict
+# lt_api_check - LanguageTool API wrapper for terminal and GoldenDict
 # Derived from pylanguagetool (https://pylanguagetool.lw1.at/)
 # Authors: GLM-5.1🧙‍♂️, scillidan🤡
 #
 # Usage:
 #   # Plain text (no color)
-#   uv run pylanguagetool_goldendict.py --api-url "http://localhost:8040/v2/" --lang en-US "The quikc brown fox"
+#   uv run lt_api_check.py --api-url "http://localhost:8040/v2/" --lang en-US "The quikc brown fox"
 #
 #   # ANSI colored (for terminal)
-#   uv run pylanguagetool_goldendict.py --api-url "http://localhost:8040/v2/" --lang en-US --ansi "The quikc brown fox"
+#   uv run lt_api_check.py --api-url "http://localhost:8040/v2/" --lang en-US --ansi "The quikc brown fox"
 #
 #   # HTML colored (for GoldenDict, requires monospace font)
-#   uv run pylanguagetool_goldendict.py --api-url "http://localhost:8040/v2/" --lang en-US --html "The quikc brown fox"
+#   uv run lt_api_check.py --api-url "http://localhost:8040/v2/" --lang en-US --html "The quikc brown fox"
 #
 #   # Clipboard input
-#   uv run pylanguagetool_goldendict.py --api-url "http://localhost:8040/v2/" --lang en-US --clipboard --html
+#   uv run lt_api_check.py --api-url "http://localhost:8040/v2/" --lang en-US --clipboard --html
 #
 #   # Read from stdin
-#   echo "The quikc brown fox" | uv run pylanguagetool_goldendict.py --api-url "http://localhost:8040/v2/" --lang en-US --html
+#   echo "The quikc brown fox" | uv run lt_api_check.py --api-url "http://localhost:8040/v2/" --lang en-US --html
 #
 # Changelog:
 # - v2: Direct API calls instead of wrapping pylanguagetool CLI (colorama
