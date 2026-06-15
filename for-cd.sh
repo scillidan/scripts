@@ -1,14 +1,14 @@
 #!/bin/bash
-# CDs - cd dirs, spawn tool
+# cd dirs, spawn tool
 # Authors: GLM-5🧙‍♂️, Hy3-preview🧙‍♂️ scillidan🤡
-# Usage: cds.sh <command> [paths...]
-# Examples:
-#   cds.sh lazygit
-#   cds.sh nvim .
-#   cds.sh lazygit ~/r1 ~/r2
 #
-# Environment:
-#   CDS_TERMINAL=wezterm | tmux
+# Usage: for-cd.sh <command> [paths...]
+# Examples:
+#   for-cd.sh lazygit
+#   for-cd.sh nvim .
+#   for-cd.sh lazygit ~/r1 ~/r2
+#
+# Environment: FOR_CDS_TERMINAL: wezterm (default) | tmux
 
 set -o errexit
 set -o nounset
@@ -18,7 +18,7 @@ shift
 
 if [[ -z "$TOOL" ]]; then
     echo "Error: No tool specified" >&2
-    echo "Usage: cds.sh <command> [path1] [path2] ..." >&2
+    echo "Usage: for-cd.sh <command> [path1] [path2] ..." >&2
     exit 1
 fi
 
@@ -101,9 +101,9 @@ open_in_tabs() {
     done
 }
 
-CDS_TERMINAL="${CDS_TERMINAL:-}"
+FOR_CDS_TERMINAL="${FOR_CDS_TERMINAL:-wezterm}"
 
-case "$CDS_TERMINAL" in
+case "$FOR_CDS_TERMINAL" in
     wezterm)
         open_in_tabs wezterm
         ;;
@@ -111,7 +111,7 @@ case "$CDS_TERMINAL" in
         open_in_tabs tmux
         ;;
     *)
-        echo "Error: Unsupported or unset CDS_TERMINAL" >&2
+        echo "Error: Unsupported FOR_CDS_TERMINAL value: $FOR_CDS_TERMINAL" >&2
         echo "Supported values: wezterm, tmux" >&2
         exit 1
         ;;

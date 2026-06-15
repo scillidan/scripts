@@ -3,12 +3,12 @@
 # Authors: GLM-5🧙‍♂️, scillidan🤡
 #
 # Usage:
-#   paths.sh <command> [file1] [file2] ...
+#   for-path.sh <command> [file1] [file2] ...
 #
 # Examples:
-#   paths.sh "magick convert {} -quality 90 {.}.jpg" img1.png img2.png
-#   paths.sh "die {}" file1.exe file2.exe
-#   paths.sh "vimg vcs -c4 -n16 {}" video.mp4
+#   for-path.sh "magick convert {} -quality 90 {.}.jpg" img1.png img2.png
+#   for-path.sh "die {}" file1.exe file2.exe
+#   for-path.sh "vimg vcs -c4 -n16 {}" video.mp4
 #
 # Placeholders in command:
 #   {}  - Full file path
@@ -18,7 +18,7 @@
 #   {e} - Extension only
 
 if [ $# -eq 0 ]; then
-    echo "Usage: paths.sh <command> [file1] [file2] ..."
+    echo "Usage: for-path.sh <command> [file1] [file2] ..."
     echo ""
     echo "Placeholders:"
     echo "  {}  - Full file path"

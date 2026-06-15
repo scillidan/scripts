@@ -5,8 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-source $SCRIPT_DIR/fzf_bind.sh
+source "$SCRIPT_DIR/fzf_bind.sh"
 
 FLAG="--multi --layout=reverse --border none --preview-border none --no-scrollbar --no-separator --inline-info --ansi"
 FZF_DEFAULT_COMMAND="rg --files"
@@ -19,16 +18,27 @@ PREVIEW_WINDOW="--preview-window 'right,60%,wrap,~2'"
 
 FZF_CMD="fzf $FLAG $BIND_NAVIGATE $BIND_SELECT $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_TOGGLE_PREVIEW $PREVIEW $PREVIEW_WINDOW"
 
+expand_path() {
+    local path="$1"
+    path="${path/#~/${HOME}}"
+    path=$(eval echo "$path")
+    path="${path//\\//}"
+    echo "$path"
+}
+
 get_target_dir() {
-    if [[ -n "$1" ]]; then
-        if [[ -d "$1" ]]; then
-            echo "$1"
-        else
-            echo "Error: Directory does not exist: $1" >&2
-            return 1
-        fi
-    else
+    local raw_dir="${1:-}"
+    if [[ -z "$raw_dir" ]]; then
         echo "."
+        return
+    fi
+    local dir
+    dir=$(expand_path "$raw_dir")
+    if [[ -d "$dir" ]]; then
+        echo "$dir"
+    else
+        echo "Error: Directory does not exist: $dir" >&2
+        return 1
     fi
 }
 
