@@ -17,14 +17,15 @@
 #
 # Usage:
 #   # Auto mode (detect language, match direction rules)
-#   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-4b-it-qat --input English --output Chinese --prompt quick --original-text "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice “without pictures or conversations?”"
-#   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-12b-it --input English --output Chinese --prompt serious --original-text "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice “without pictures or conversations?”"
+#   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-4b-it-qat --input English --output Chinese --prompt quick --original-text "Alice was beginning to get very tired..."
+#   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-12b-it --input English --output Chinese --prompt serious --original-text "Alice was beginning to get very tired..."
 #   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-4b-it-qat --auto-mode all2zh-cn --auto-mode zh-cn2en "The quick brown fox jumps over the lazy dog."
 #   uv run llm_trans.py --host http://127.0.0.1:8080 --model gemma-3-4b-it-qat --auto-mode all2zh-cn --auto-mode zh-cn2en "敏捷的棕色狐狸跳过懒惰的狗。"
 #   echo "..." | uv run llm_trans.py ... --stdin
 #   cat file.txt | uv run llm_trans.py ... --stdin
 #
 # Changelog:
+# - v6: Extract common utilities to llm_utils.llm_common.
 # - v5: Replace --input-out with --auto-mode (no defaults) and --input/--output
 #   for explicit direction. Mutually exclusive.
 # - v4: Parameterize translation direction via --auto-mode (e.g. all2zh-cn zh-cn2en).
@@ -39,19 +40,26 @@
 # - v1: Initial unified translator (Ollama + llama.cpp).
 
 
-import requests
 import json
-import argparse
 import re
+import argparse
 import sys
-import io
-import unicodedata
 
 from langdetect import detect, DetectorFactory
 from iso639 import Lang
 
+from llm_utils.llm_common import (
+    add_common_cli,
+    call_llamacpp,
+    emit,
+    format_html,
+    handle_llm_error,
+    normalize_text,
+    read_stdin,
+)
+
+
 DetectorFactory.seed = 0
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
 def lang_label(code):
@@ -81,54 +89,16 @@ def lang_to_code(token):
 
 PROMPTS = {
     "quick": (
-        "You are a translation engine.\n"
-        "Input: text in {src_lang}\n"
-        "Output: text in {tgt_lang}\n"
-        "No explanation. No formatting. No extra words.\n"
+        "Translate from {src_lang} to {tgt_lang}.\n"
+        "Output ONLY the translated text. No explanation. No formatting.\n"
         "\n{src_lang}: {text}\n{tgt_lang}:"
     ),
     "serious": (
-        "You are a professional translator.\n"
-        "Only output the translated text.\n"
-        "Do NOT explain.\n"
-        "Do NOT add notes.\n"
-        "Do NOT reply conversationally.\n"
-        "\nTranslate from {src_lang} to {tgt_lang}:\n\n{text}"
+        "Translate from {src_lang} to {tgt_lang}.\n"
+        "Output ONLY the translated text. No explanations. No notes. No conversation.\n"
+        "\n{text}"
     ),
 }
-
-BAD_CHARS = [
-    "\x00", "\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07",
-    "\x08", "\x0b", "\x0c", "\x0e", "\x0f",
-    "\u200b", "\u200c", "\u200d", "\ufeff",
-]
-
-
-def clean_surrogates(text):
-    if not text:
-        return ""
-    return "".join(c for c in text if not ("\ud800" <= c <= "\udfff"))
-
-
-def normalize_text(text):
-    if not text:
-        return ""
-    text = clean_surrogates(text)
-    try:
-        text = unicodedata.normalize("NFKC", text)
-    except Exception:
-        pass
-    for ch in BAD_CHARS:
-        text = text.replace(ch, "")
-    return text.strip()
-
-
-def safe_json_dumps(obj, ensure_ascii=False):
-    try:
-        s = json.dumps(obj, ensure_ascii=ensure_ascii)
-    except UnicodeEncodeError:
-        s = json.dumps(obj, ensure_ascii=True)
-    return clean_surrogates(s)
 
 
 def is_chinese(text):
@@ -167,27 +137,6 @@ def resolve_direction(text, directions):
     return None
 
 
-def read_input_with_encoding(fileobj):
-    try:
-        return fileobj.buffer.read().decode("utf-8")
-    except UnicodeDecodeError:
-        try:
-            fileobj.buffer.seek(0)
-            bom = fileobj.buffer.read(2)
-            fileobj.buffer.seek(0)
-            if bom in (b"\xff\xfe", b"\xfe\xff"):
-                return fileobj.buffer.read().decode("utf-16")
-            try:
-                fileobj.buffer.seek(0)
-                return fileobj.buffer.read().decode("utf-16-le")
-            except Exception:
-                fileobj.buffer.seek(0)
-                return fileobj.buffer.read().decode("utf-16-be")
-        except Exception:
-            fileobj.buffer.seek(0)
-            return fileobj.buffer.read().decode("latin-1", errors="replace")
-
-
 JSON_TRANS_KEYS = ("translation", "chinese", "english", "trans")
 
 
@@ -209,35 +158,12 @@ def build_prompt(text, src, tgt, template):
     return template.replace("{src_lang}", lang_label(src)).replace("{tgt_lang}", lang_label(tgt)).replace("{text}", text)
 
 
-def call_llamacpp(prompt, model, host, timeout):
-    url = f"{host}/v1/chat/completions"
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-        "max_tokens": 512,
-        "stream": False,
-    }
-    body = safe_json_dumps(payload).encode("utf-8", errors="replace")
-    resp = requests.post(
-        url,
-        headers={"Content-Type": "application/json; charset=utf-8"},
-        data=body,
-        timeout=timeout,
-    )
-    resp.raise_for_status()
-    choices = resp.json().get("choices", [])
-    if choices:
-        return choices[0].get("message", {}).get("content", "").strip()
-    return ""
-
-
 def translate_line(text, model, host, prompt_template, src, tgt, timeout):
     norm = normalize_text(text)
     if not norm:
         return text
     prompt = build_prompt(norm, src, tgt, prompt_template)
-    raw = call_llamacpp(prompt, model, host, timeout)
+    raw = call_llamacpp(prompt, model, host, timeout, temperature=0.2)
     translated = postprocess(raw)
     return normalize_text(translated) if translated else norm
 
@@ -255,33 +181,9 @@ def translate_multiline(text, model, host, prompt_template, src, tgt, timeout):
     return "\n".join(results)
 
 
-def format_html(translated, original=None):
-    lines = translated.split("\n")
-    parts = ['<div style="margin: 0; padding: 0;">']
-    for i, line in enumerate(lines):
-        if line.strip():
-            parts.append(f'<p style="margin: 0; padding: 0">{line}</p>')
-        elif i < len(lines) - 1:
-            parts.append('<p style="margin: 0; padding: 0">&nbsp;</p>')
-    parts.append("</div>")
-    if original:
-        src_lines = original.split("\n")
-        parts.append('<div style="margin: 0; padding: 0;">')
-        for i, line in enumerate(src_lines):
-            if line.strip():
-                parts.append(f'<p style="margin: 0; padding: 0">{line}</p>')
-            elif i < len(src_lines) - 1:
-                parts.append('<p style="margin: 0; padding: 0">&nbsp;</p>')
-        parts.append("</div>")
-    return "".join(parts)
-
-
-def emit(text):
-    print(text)
-
-
 def main():
     parser = argparse.ArgumentParser(description="Translate text using local LLM (llama.cpp server).")
+    add_common_cli(parser)
     grp = parser.add_mutually_exclusive_group()
     grp.add_argument("--auto-mode", type=str, action="append", default=None,
         help="Auto-detect direction rule, repeatable, e.g. --auto-mode all2zh-cn --auto-mode zh-cn2en")
@@ -289,16 +191,11 @@ def main():
         help="Source language (ISO code or English name, e.g. en or English)")
     parser.add_argument("--output", type=str, default=None,
         help="Target language (ISO code or English name, e.g. zh or Chinese); required with --input")
-    parser.add_argument("--host", type=str, required=True, help="llama.cpp server host, e.g. http://127.0.0.1:8080")
     parser.add_argument("--model", type=str, required=True, help="Model name sent to server")
     parser.add_argument("--prompt", type=str, default="quick", choices=list(PROMPTS.keys()), help="Prompt preset (default: quick)")
-    parser.add_argument("--timeout", type=int, default=30, help="Request timeout in seconds")
 
     parser.add_argument("--html", action="store_true", help="Output in HTML format")
-    parser.add_argument("--stdin", action="store_true", help="Read input from stdin")
     parser.add_argument("--original-text", action="store_true", help="Append original text")
-    parser.add_argument("--debug", action="store_true", help="Show debug info on stderr")
-    parser.add_argument("--silent", action="store_true", help="Suppress error messages")
     parser.add_argument("text", nargs="*", default="", help="Input text")
 
     args = parser.parse_args()
@@ -310,8 +207,7 @@ def main():
 
     input_text = ""
     if args.stdin:
-        if not sys.stdin.isatty():
-            input_text = read_input_with_encoding(sys.stdin).rstrip("\r\n")
+        input_text = read_stdin(args.silent)
     elif args.text:
         input_text = " ".join(args.text)
 
@@ -355,8 +251,7 @@ def main():
             input_text, args.model, args.host.rstrip("/"), prompt_template, src, tgt, args.timeout
         )
     except Exception as e:
-        if not args.silent:
-            print(f"Error: {e}", file=sys.stderr)
+        handle_llm_error(e, args.silent, host=args.host)
         sys.exit(1)
 
     if args.html:

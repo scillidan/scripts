@@ -1,0 +1,220 @@
+abbreviation                         | abbr
+about                                | abt
+acknowledgement                      | ack
+alignment                            | align
+analytic                             | analyt
+analyzer                             | anlz
+annotation                           | annot
+antivirus                            | av
+archive                              | arc
+argument                             | arg
+aseprite                             | ase
+attention                            | attn
+audio                                | aud
+author                               | aut
+autohotkey                           | ahk
+awesome                              | aweso
+backspace                            | bksp
+backup                               | bak
+bookmark                             | bkm
+border                               | brd
+browser                              | brows
+cargo                                | cgo
+certificate                          | cert
+chapter                              | chpt
+characte                             | char
+check                                | chk
+cherrytree                           | ct
+clipboard                            | clp
+clock                                | clk
+comic book archive                   | cbz
+comment                              | cmt
+communication                        | comm
+community                            | cmty
+complementary                        | coms
+complete                             | cmp
+computer-aided design                | cad
+config                               | cfg
+console                              | con
+consolidated                         | cons
+control/controller                   | ctrl
+cue sheet file                       | cue
+cursor                               | cur
+database                             | db
+debug                                | dbg
+decode                               | dec
+default                              | dflt
+dependencies                         | depends
+deploy                               | dpy
+develop preview ship                 | dps
+diagram                              | diag
+dialogue                             | dialog
+digital audio workstation            | daw
+directory                            | dir
+domain name system                   | dns
+download                             | dl
+driver                               | drv
+dynamic link library                 | dll
+editor                               | ed
+effect                               | efct
+electronic publication               | epub
+email                                | em
+emergent                             | emerg
+emulator                             | emu
+encode; encrypt                      | enc
+encyclopaedia                        | encycl
+engine                               | eng
+entity component system              | ecs
+entry                                | ent
+environment                          | env
+ether                                | eth
+exchange                             | exch
+executable                           | exe
+experiment                           | expt
+extension                            | ext
+extra                                | ex
+file manager                         | fm
+file transfer protocol               | ftp
+filter pipe                          | fp
+find                                 | fd
+firewall                             | fw
+folder                               | flr
+formatter                            | fmt
+frame                                | frm
+framework                            | fmk
+framework                            | fwk
+function                             | func
+fuzzy finder                         | fzf
+gallery                              | gall
+github                               | gh
+glossary                             | gly
+grammar                              | gram
+hard disk                            | hd
+hardware                             | hw
+highlight                            | hi
+hypothesis                           | hyp
+image to image                       | iti
+input method editor                  | ime
+integrated development environment   | ide
+integration                          | intg
+inventory management system          | ims
+kernel-based virtual machine         | kvm
+key management server                | kms
+keyboard                             | kbd
+label                                | lbl
+language server protocol             | lsp
+launcher                             | lau
+layout                               | lo
+learn                                | lrn
+library                              | lib
+license                              | lic
+list                                 | ls
+local area network                   | lan
+logli                                | log
+magic the gathering arena            | mtga
+matroska video                       | mkv
+message                              | msg
+milliseconds                         | ms
+mirror                               | mir
+monitor                              | montr
+mouse button                         | mbtn
+moving picture experts group         | mpeg
+multimedia container format          | mcf
+multiple                             | mult
+narrator                             | nar
+node editor                          | node-ed
+notify                               | ntfy
+object-oriented programming          | opp
+obsidian                             | obs
+open publication distribution system | opds
+optical character recognition        | ocr
+optical disc image                   | iso
+packager                             | pkger
+palette                              | pal
+paletter                             | pal
+particle                             | ptcl
+perplexity                           | ppl
+picker                               | pick
+pipeline                             | pl
+pixel                                | px
+platform                             | pltf
+player                               | p
+plugin                               | plug
+plugin manager                       | plugm
+power                                | pwr
+preview                              | pv
+previous                             | prev
+process                              | proc
+profiler                             | prof
+public                               | pub
+python                               | py
+reader                               | read
+readme                               | readm
+Recommend                            | rcmd
+record                               | rec
+recovery                             | rec
+reference                            | ref
+registry                             | reg
+remove                               | rm
+rename                               | rn
+resource                             | rsrc
+reverse                              | rev
+robot                                | bot
+sampler                              | sampl
+scene                                | sn
+screen                               | scr
+screenshot                           | scrs
+search                               | srch
+search displace                      | sd
+section                              | sec
+select                               | sel
+sensor                               | snsr
+serial, serialize                    | ser
+server                               | srv
+shell                                | sh
+shield                               | shld
+sketch                               | sk
+snippet                              | snpt
+social                               | soc
+source                               | src
+spin-off                             | so
+stable diffusion webui               | sdw
+start                                | strt
+status                               | sts
+stock                                | stk
+storage                              | stg
+stream                               | stm
+structured query language            | sql
+summary                              | smry
+switch                               | sw
+syntax                               | sx
+synthesiser                          | synth
+system                               | sys
+system info                          | si
+system link                          | syslink
+tape archive                         | tar
+template                             | tmplt
+terminal                             | trm
+text                                 | txt
+text to 3d                           | tt3d
+text to image                        | tti
+text to model                        | ttm
+text-to-sound                        | tts
+texture                              | tex
+thumbnail                            | thumb
+title                                | tit
+too long didn't read                 | tldr
+tracker                              | trkr
+translation                          | trans
+transmission control protocol        | tcp
+underline                            | und
+vector                               | vec
+version                              | ver
+virtual machine                      | vm
+virtual virtualizer                  | vr
+visual                               | vis
+volume                               | vol
+wallpaper                            | wallpap
+weight                               | wt
+widnow                               | wdw
+zettelkasten                         | zk

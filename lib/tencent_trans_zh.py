@@ -439,7 +439,7 @@ def format_html_output(
         html_output += '<div style="margin: 0; padding: 0;">'
         for i, line in enumerate(source_lines):
             if line.strip():
-                html_output += f'<p style="margin: 0; padding: 0">{line}</p>'
+                html_output += f'<p style="margin: 0; padding: 0; color: #666">{line}</p>'
             elif i < len(source_lines) - 1:
                 html_output += '<p style="margin: 0; padding: 0">&nbsp;</p>'
         html_output += "</div>"
