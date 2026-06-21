@@ -10,7 +10,7 @@
 #     Edit > Configure custom actions > Add action with command: /path/to/svgs2icos.sh %F
 #
 #   Command line:
-#     ./svgs2icos.sh <file1> <file2> ...
+#     ./script.sh <file1> <file2> ...
 #
 # Requires: inkscape, magick (ImageMagick)
 

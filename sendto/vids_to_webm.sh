@@ -10,7 +10,7 @@
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
 #
 #   Command line:
-#     ./vids_to_webm.sh <vid1> <vid2> ...
+#     ./script.sh <vid1> <vid2> ...
 
 if [ $# -eq 0 ]; then
     echo "Error: No files selected"

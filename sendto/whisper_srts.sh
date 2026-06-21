@@ -14,7 +14,7 @@
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
 #
 #   Command line:
-#     ./whisper_srts.sh <audio1> <audio2> ...
+#     ./script.sh <audio1> <audio2> ...
 
 if [ $# -eq 0 ]; then
     echo "Error: No files selected"

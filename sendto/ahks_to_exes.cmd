@@ -7,7 +7,7 @@ REM     Create a .lnk shortcut to this script in the SendTo folder, then:
 REM     Select files > Right-click > Send To > ahks_to_exes.cmd
 REM
 REM   Command line:
-REM     install_inno.cmd <file1> <file2> ...
+REM     script.cmd <file1> <file2> ...
 
 setlocal enabledelayedexpansion
 

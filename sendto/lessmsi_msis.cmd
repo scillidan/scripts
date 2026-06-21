@@ -7,7 +7,7 @@ REM     Create a .lnk shortcut to this script in the SendTo folder, then:
 REM     Select files > Right-click > Send To > win_lessmsi_msis.cmd
 REM
 REM   Command line:
-REM     win_lessmsi_msis.cmd <file1> <file2> ...
+REM     script.cmd <file1> <file2> ...
 
 setlocal EnableDelayedExpansion
 
