@@ -1,1 +1,5 @@
 translate | tl
+zizmor | zz
+lint | ln
+comment | cmntlambda | lm
+summarize | sum

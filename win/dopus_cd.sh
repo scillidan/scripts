@@ -13,7 +13,7 @@ to_win_path() {
     esac
 
     if command -v cygpath >/dev/null 2>&1; then
-        cygpath -w "$p" && return
+        cygpath -wa "$p" && return
     fi
 
     if [[ "$p" != /* ]]; then
