@@ -62,29 +62,67 @@ from llm_utils.llm_common import (
 DetectorFactory.seed = 0
 
 
+_NAME_OVERRIDES = {
+    'simplified chinese': 'zh',
+    'simplified-chinese': 'zh',
+    'traditional chinese': 'zh-tw',
+    'traditional-chinese': 'zh-tw',
+}
+
+_ZH_TRADITIONAL_REGIONS = {'tw', 'hk', 'mo', 'hant'}
+_ZH_SIMPLIFIED_REGIONS = {'cn', 'hans', 'sg'}
+
+
 def lang_label(code):
+    """Convert any language code to a human-readable name for the prompt."""
     base = code.split("-")[0].lower()
     try:
-        return Lang(base).name
+        name = Lang(base).name
     except Exception:
         return code
+    if base == "zh" and "-" in code:
+        region = code.split("-", 1)[1].lower()
+        if region in _ZH_TRADITIONAL_REGIONS:
+            return "Traditional Chinese"
+    return name
 
 
 def lang_to_code(token):
-    t = token.strip().lower()
-    if "-" in t:
-        base = t.split("-")[0]
+    """Normalize user input (zh, zho, Chinese, chinese, zh-tw) to an ISO code.
+
+    For zh variants: zh-tw/hk/mo/hant -> zh-tw (Traditional), zh-cn/hans/sg -> zh (Simplified).
+    """
+    if token is None:
+        return token
+    t = token.strip()
+    if not t:
+        return t
+    tl = t.lower()
+    if tl in _NAME_OVERRIDES:
+        return _NAME_OVERRIDES[tl]
+
+    has_dash = "-" in tl
+    if has_dash:
+        base = tl.split("-")[0]
+        region = tl.split("-", 1)[1]
     else:
-        base = t
+        base = tl
+        region = None
+
     try:
-        Lang(base)
-        return t
+        pt1 = Lang(base).pt1
     except Exception:
-        pass
-    try:
-        return Lang(token.strip()).pt1
-    except Exception:
-        return t
+        try:
+            pt1 = Lang(t.title()).pt1
+        except Exception:
+            return base
+
+    if pt1 == "zh" and has_dash and region:
+        if region in _ZH_TRADITIONAL_REGIONS:
+            return "zh-tw"
+        if region in _ZH_SIMPLIFIED_REGIONS:
+            return "zh"
+    return pt1
 
 
 PROMPTS = {
@@ -101,17 +139,11 @@ PROMPTS = {
 }
 
 
-def is_chinese(text):
-    return any("\u4e00" <= c <= "\u9fff" for c in text)
-
-
 def base_lang(code):
     return code.split("-")[0].lower()
 
 
 def detect_lang(text):
-    if is_chinese(text):
-        return "zh"
     try:
         return detect(text)
     except Exception:

@@ -22,7 +22,8 @@ fi
 error=0
 
 for file in "$@"; do
-    if ! vimg vcs -c4 -n16 -H270 --avif-fps=20 "$file"; then
+    dir="$(dirname "$file")"
+    if ! (cd "$dir" && vimg vcs -c4 -n16 -H270 --avif-fps=20 "$file"); then
         echo "Error: Failed to process $file"
         error=1
     fi

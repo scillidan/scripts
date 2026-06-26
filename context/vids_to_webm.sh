@@ -35,7 +35,7 @@ error=0
 for file in "$@"; do
     dir=$(dirname "$file")
     name=$(basename "$file" | sed 's/\.[^.]*$//')
-    output="$dir/${name}_webm.webm"
+    output="$dir/${name}.webm"
     temp="$dir/${name}_webm_tmp.webm"
 
     printf "\n--- %s ---\n" "$file"
