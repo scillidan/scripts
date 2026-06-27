@@ -1,0 +1,27 @@
+#!/bin/sh
+# Show file hashes using hashit
+#
+# Usage:
+#   Windows:
+#     Create a .lnk shortcut to this script in the SendTo folder, then:
+#     Select files > Right-click > Send To > hashit_files
+#
+#   Linux (Thunar):
+#     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
+#
+#   Command line:
+#     ./script.sh <file1> <file2> ...
+
+error=0
+
+for file in "$@"; do
+    if ! hashit "$file"; then
+        echo "Error: Failed to hash $file"
+        error=1
+    fi
+done
+
+if [ $error -ne 0 ]; then
+    echo "Press Enter to exit..."
+    read
+fi

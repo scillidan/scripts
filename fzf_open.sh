@@ -48,32 +48,30 @@ open_file() {
 }
 
 case "${ext,,}" in
-    .png|.jpg|.jpeg|.gif|.bmp|.tiff|.tif|.webp|.svg|.ico)
+    .png|.jpg|.jpeg|.bmp|.tiff|.tif|.webp|.ico)
         # open_file "$file"
         clip_to_clipboard "$file"
         ;;
-    .mp4|.mkv|.avi|.mp3|.ogg|.flac|.wav)
-        # open_file "$file"
-        clip_to_clipboard "$file"
+    .svg|.avif)
+        qview "$file"
         ;;
-    .pdf)
-        # open_file "$file"
-        clip_to_clipboard "$file"
+    .mp4|.mkv|.webm|.avi|.gif)
+        mpvc video "$file"
         ;;
-    .epub)
-        # open_file "$file"
-        clip_to_clipboard "$file"
+    .mp3|.ogg|.wav|.flac|.m4a|.m4b)
+        mpvc music "$file"
+        ;;
+    .pdf|.epub)
+        sioyek --new-window "$file"
         ;;
     .md)
-        # glow -p "$file" || open_file "$file"
-        clip_to_clipboard "$file"
+        glow "$file"
         ;;
     .csv)
-        # xan view "$file" || open_file "$file"
-        clip_to_clipboard "$file"
+        tw "$file"
         ;;
     .log)
-        clip_to_clipboard "$file"
+        tspin "$file"
         ;;
     *)
         clip_to_clipboard "$file"
