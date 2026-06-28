@@ -21,7 +21,5 @@ for file in "$@"; do
     fi
 done
 
-if [ $error -ne 0 ]; then
-    echo "Press Enter to exit..."
-    read
-fi
+echo "Press Enter to exit..."
+read
