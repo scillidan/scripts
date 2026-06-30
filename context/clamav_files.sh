@@ -17,15 +17,24 @@ error=0
 for target in "$@"; do
     if [ -d "$target" ]; then
         echo "Scanning folder: $target"
-        clamscan -r -i "$target" || error=1
+        if ! clamscan -r -i "$target"; then
+            echo "Error: ClamAV scan failed for folder: $target"
+            error=1
+            continue
+        fi
     else
         echo "Scanning file: $target"
-        clamscan -v -a --max-filesize=1000M --max-scansize=1000M --alert-exceeds-max=yes "$target" || error=1
+        if ! clamscan -v -a --max-filesize=1000M --max-scansize=1000M --alert-exceeds-max=yes "$target"; then
+            echo "Error: ClamAV scan failed for file: $target"
+            error=1
+            continue
+        fi
     fi
 done
 
 if [ $error -ne 0 ]; then
-    echo "Error: Scan failed for some files"
     echo "Press Enter to exit..."
     read
 fi
+
+exit $error

@@ -36,6 +36,7 @@ for file in "$@"; do
     else
         echo "Error: File does not exist: $file"
         error=1
+        continue
     fi
 done
 
@@ -45,3 +46,5 @@ if [ $error -ne 0 ]; then
     echo "Press Enter to exit..."
     read
 fi
+
+exit $error
