@@ -1,5 +1,5 @@
 #!/bin/bash
-# https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
+REM https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
 
 set tmpfile=%TEMP%\yazi-cwd.%random%
 
