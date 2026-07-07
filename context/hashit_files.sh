@@ -26,4 +26,6 @@ if [ $error -ne 0 ]; then
     read
 fi
 
-exit $error
+echo ""
+echo "Press Enter to exit..."
+read
