@@ -7,47 +7,53 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
-SCOPE_MAP = {
-    "text.html": "html",
-    "text.html.markdown": "markdown",
-    "text.html.erb": "html",
-    "text.xml": "xml",
-    "text.plain": "plaintext",
-    "text.tex": "latex",
-    "text.tex.latex": "latex",
-    "text.m3u": "plaintext",
-    "text.css": "css",
-    "text.css.less": "css",
-    "text.css.scss": "css",
-    "source.python": "python",
-    "source.js": "javascript",
-    "source.js.jsx": "javascript",
-    "source.ts": "typescript",
-    "source.tsx": "typescript",
-    "source.go": "go",
-    "source.rust": "rust",
-    "source.ruby": "ruby",
-    "source.shell": "shellscript",
-    "source.shell.bash": "shellscript",
-    "source.yaml": "yaml",
-    "source.json": "json",
-    "source.toml": "toml",
-    "source.sql": "sql",
-    "source.c": "c",
-    "source.cpp": "cpp",
-    "source.java": "java",
-    "source.lua": "lua",
-    "source.perl": "perl",
-    "source.php": "php",
-    "source.scss": "css",
-    "source.less": "css",
-    "source.css": "css",
-    "source.r": "r",
-    "source.dart": "dart",
-    "source.swift": "swift",
-    "source.kotlin": "kotlin",
-    "text": None,
-}
+SCOPE_MAP = dict(
+    sorted(
+        {
+            "text.html.markdown": "markdown",
+            "text.html.erb": "html",
+            "text.html": "html",
+            "text.xml": "xml",
+            "text.plain": "plaintext",
+            "text.tex.latex": "latex",
+            "text.tex": "latex",
+            "text.m3u": "plaintext",
+            "text.css.less": "css",
+            "text.css.scss": "css",
+            "text.css": "css",
+            "source.python": "python",
+            "source.js.jsx": "javascript",
+            "source.js": "javascript",
+            "source.tsx": "typescript",
+            "source.ts": "typescript",
+            "source.go": "go",
+            "source.rust": "rust",
+            "source.ruby": "ruby",
+            "source.shell.bash": "shellscript",
+            "source.shell": "shellscript",
+            "source.yaml": "yaml",
+            "source.json": "json",
+            "source.toml": "toml",
+            "source.sql": "sql",
+            "source.c": "c",
+            "source.cpp": "cpp",
+            "source.java": "java",
+            "source.lua": "lua",
+            "source.perl": "perl",
+            "source.php": "php",
+            "source.scss": "css",
+            "source.less": "css",
+            "source.css": "css",
+            "source.r": "r",
+            "source.dart": "dart",
+            "source.swift": "swift",
+            "source.kotlin": "kotlin",
+            "text": None,
+        }.items(),
+        key=lambda x: len(x[0]),
+        reverse=True,
+    )
+)
 
 
 def map_scope(sublime_scope):
@@ -74,15 +80,6 @@ def map_scope(sublime_scope):
         ):
             return candidate
     return None
-
-
-def escape_json_string(s):
-    s = s.replace("\\", "\\\\")
-    s = s.replace('"', '\\"')
-    s = s.replace("\n", "\\n")
-    s = s.replace("\r", "")
-    s = s.replace("\t", "\\t")
-    return s
 
 
 def parse_sublime_snippet(filepath):
