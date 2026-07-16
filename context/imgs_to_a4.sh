@@ -1,7 +1,7 @@
 #!/bin/sh
 # Fit image into A4 (2476x3504) canvas with black background
 #
-# Pipeline: [rotate 90] -> fit height <=3404 -> fit width >=2376 -> canvas 2476x3504 black center
+# Pipeline: [rotate 90] -> fit within 2376x3404 -> canvas 2476x3504 black center
 #
 # Usage:
 #   Windows:
@@ -40,12 +40,11 @@ error=0
 for file in "$@"; do
 	dir=$(dirname "$file")
 	name=$(basename "$file" | sed 's/\.[^.]*$//')
-	output="$dir/${name}${suffix}_${file##*.}"
+	output="$dir/${name}${suffix}.${file##*.}"
 
 	if ! magick "$file" \
 		$rotate_ops \
-		-resize 'x3404>' \
-		-resize '2376x<' \
+		-resize '2376x3404>' \
 		-background black -gravity center -extent 2476x3504 \
 		"$output"; then
 		echo "Error: Failed to process $file"
