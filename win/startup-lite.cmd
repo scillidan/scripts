@@ -1,7 +1,5 @@
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Ditto.lnk"
 timeout /t 1 /nobreak >nul
-start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Espanso.lnk"
-timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\GoldenDict.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\GoldenDict Search In Group.lnk"
@@ -17,3 +15,5 @@ timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\virgo.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Window Switcher.lnk"
+timeout /t 1 /nobreak >nul
+start "" "%SCOOP%\apps\espanso\current\espansod.exe start"
