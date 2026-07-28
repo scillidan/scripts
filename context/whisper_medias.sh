@@ -265,12 +265,16 @@ for file in "$@"; do
 
 	sed -i 's/^[,，、。.！!？?；;：:]//' "${outbase}.srt" 2>/dev/null
 
-	python "$SCRIPT_DIR/lib/whisper_medias.py" fix "${outbase}.srt" 2>/dev/null || {
-		echo "[$n/$total] Warning: Fix failed for ${outbase}.srt"
+	python "$SCRIPT_DIR/lib/whisper_medias.py" fix "${outbase}.srt" || {
+		echo "[$n/$total] Error: Fix failed for ${outbase}.srt"
+		error=1
 	}
 
 	if [ "$OUTPUT_MODE" = "2" ]; then
-		python "$SCRIPT_DIR/lib/whisper_medias.py" nopunc "${outbase}.srt" "${outbase}_no-punc.srt"
+		python "$SCRIPT_DIR/lib/whisper_medias.py" nopunc "${outbase}.srt" "${outbase}_no-punc.srt" || {
+			echo "[$n/$total] Error: nopunc failed for ${outbase}.srt"
+			error=1
+		}
 	fi
 done
 

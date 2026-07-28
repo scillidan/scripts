@@ -188,7 +188,7 @@ def cmd_fix(args):
         if not os.path.isfile(filepath):
             print(f"Error: File not found: {filepath}", file=sys.stderr)
             continue
-        with open(filepath, "r", encoding="utf-8-sig") as f:
+        with open(filepath, "r", encoding="utf-8-sig", errors="replace") as f:
             content = f.read()
         entries = parse_srt(content)
         if not entries:
@@ -227,7 +227,7 @@ def cmd_nopunc(args):
         print("Usage: python whisper_medias.py nopunc <input.srt> <output.srt>")
         return 1
     src, dst = args[0], args[1]
-    with open(src, "r", encoding="utf-8-sig") as f:
+    with open(src, "r", encoding="utf-8-sig", errors="replace") as f:
         content = f.read()
     result = strip_punctuation_srt(content)
     d = os.path.dirname(dst)
