@@ -47,6 +47,10 @@ preview_log() {
     tspin -p "$file" 2>/dev/null || cat "$file"
 }
 
+preview_html() {
+    links -dump "$file" 2>/dev/null
+}
+
 preview_text() {
     bat --color=always --style=numbers,changes --line-range=:500 "$file" 2>/dev/null || cat "$file"
 }
@@ -72,6 +76,9 @@ case "${ext,,}" in
         ;;
     .log)
         preview_log
+        ;;
+    .html)
+        preview_html
         ;;
     *)
         preview_text

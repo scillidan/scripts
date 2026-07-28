@@ -70,6 +70,9 @@ case "${ext,,}" in
     .csv)
         tw "$file"
         ;;
+    .html)
+    	  links "$file"
+    	  ;;
     .log)
         tspin "$file"
         ;;
