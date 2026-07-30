@@ -19,61 +19,61 @@ PREVIEW_WINDOW="--preview-window 'right,60%,wrap,~2'"
 FZF_CMD="fzf $FLAG $BIND_NAVIGATE $BIND_SELECT $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_TOGGLE_PREVIEW $PREVIEW $PREVIEW_WINDOW"
 
 expand_path() {
-    local path="$1"
-    path="${path/#~/${HOME}}"
-    path=$(eval echo "$path")
-    path="${path//\\//}"
-    echo "$path"
+	local path="$1"
+	path="${path/#~/${HOME}}"
+	path=$(eval echo "$path")
+	path="${path//\\//}"
+	echo "$path"
 }
 
 get_target_dir() {
-    local raw_dir="${1:-}"
-    if [[ -z "$raw_dir" ]]; then
-        echo "."
-        return
-    fi
-    local dir
-    dir=$(expand_path "$raw_dir")
-    if [[ -d "$dir" ]]; then
-        echo "$dir"
-    else
-        echo "Error: Directory does not exist: $dir" >&2
-        return 1
-    fi
+	local raw_dir="${1:-}"
+	if [[ -z "$raw_dir" ]]; then
+		echo "."
+		return
+	fi
+	local dir
+	dir=$(expand_path "$raw_dir")
+	if [[ -d "$dir" ]]; then
+		echo "$dir"
+	else
+		echo "Error: Directory does not exist: $dir" >&2
+		return 1
+	fi
 }
 
 show_usage() {
-    echo "Usage: fzf_files [<directory>]"
-    echo ""
-    echo "Arguments:"
-    echo "  <dir>    Search in specified directory (default: current directory)"
-    echo ""
-    echo "Examples:"
-    echo "  fzf_files                    # Search in current directory"
-    echo "  fzf_files ~/Documents        # Search in specified directory"
-    echo ""
-    echo "Key Bindings:"
-    echo "  Tab          Select and move down"
-    echo "  Shift-Tab    Deselect and move down"
-    echo "  Ctrl-A       Select all"
-    echo "  Ctrl-D       Deselect all"
-    echo "  Enter        Copy selected to clipboard"
-    echo "  Alt-P        Preview page up"
-    echo "  Alt-N        Preview page down"
-    echo "  Ctrl-\\       Toggle preview position"
+	echo "Usage: fzf_files [<directory>]"
+	echo ""
+	echo "Arguments:"
+	echo "  <dir>    Search in specified directory (default: current directory)"
+	echo ""
+	echo "Examples:"
+	echo "  fzf_files                    # Search in current directory"
+	echo "  fzf_files ~/Documents        # Search in specified directory"
+	echo ""
+	echo "Key Bindings:"
+	echo "  Tab          Select and move down"
+	echo "  Shift-Tab    Deselect and move down"
+	echo "  Ctrl-A       Select all"
+	echo "  Ctrl-D       Deselect all"
+	echo "  Enter        Copy selected to clipboard"
+	echo "  Alt-P        Preview page up"
+	echo "  Alt-N        Preview page down"
+	echo "  Ctrl-\\       Toggle preview position"
 }
 
 main() {
-    local target_dir
+	local target_dir
 
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        show_usage
-        exit 0
-    fi
+	if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+		show_usage
+		exit 0
+	fi
 
-    target_dir=$(get_target_dir "$1") || exit 1
+	target_dir=$(get_target_dir "${1:-}") || exit 1
 
-    cd "$target_dir" && eval "$FZF_CMD"
+	cd "$target_dir" && eval "$FZF_CMD"
 }
 
 main "$@"
