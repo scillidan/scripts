@@ -63,14 +63,14 @@ DetectorFactory.seed = 0
 
 
 _NAME_OVERRIDES = {
-    'simplified chinese': 'zh',
-    'simplified-chinese': 'zh',
-    'traditional chinese': 'zh-tw',
-    'traditional-chinese': 'zh-tw',
+    "simplified chinese": "zh",
+    "simplified-chinese": "zh",
+    "traditional chinese": "zh-tw",
+    "traditional-chinese": "zh-tw",
 }
 
-_ZH_TRADITIONAL_REGIONS = {'tw', 'hk', 'mo', 'hant'}
-_ZH_SIMPLIFIED_REGIONS = {'cn', 'hans', 'sg'}
+_ZH_TRADITIONAL_REGIONS = {"tw", "hk", "mo", "hant"}
+_ZH_SIMPLIFIED_REGIONS = {"cn", "hans", "sg"}
 
 
 def lang_label(code):
@@ -153,7 +153,9 @@ def detect_lang(text):
 def parse_direction(spec):
     parts = spec.split("2", 1)
     if len(parts) != 2 or not parts[0] or not parts[1]:
-        raise ValueError(f"Invalid direction: {spec} (expected SRC2TGT, e.g. all2zh-cn)")
+        raise ValueError(
+            f"Invalid direction: {spec} (expected SRC2TGT, e.g. all2zh-cn)"
+        )
     return parts[0].lower(), parts[1].lower()
 
 
@@ -187,7 +189,11 @@ def postprocess(raw):
 
 
 def build_prompt(text, src, tgt, template):
-    return template.replace("{src_lang}", lang_label(src)).replace("{tgt_lang}", lang_label(tgt)).replace("{text}", text)
+    return (
+        template.replace("{src_lang}", lang_label(src))
+        .replace("{tgt_lang}", lang_label(tgt))
+        .replace("{text}", text)
+    )
 
 
 def translate_line(text, model, host, prompt_template, src, tgt, timeout):
@@ -207,34 +213,63 @@ def translate_multiline(text, model, host, prompt_template, src, tgt, timeout):
     results = []
     for line in lines:
         if line.strip():
-            results.append(translate_line(line, model, host, prompt_template, src, tgt, timeout))
+            results.append(
+                translate_line(line, model, host, prompt_template, src, tgt, timeout)
+            )
         else:
             results.append("")
     return "\n".join(results)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Translate text using local LLM (llama.cpp server).")
+    parser = argparse.ArgumentParser(
+        description="Translate text using local LLM (llama.cpp server)."
+    )
     add_common_cli(parser)
     grp = parser.add_mutually_exclusive_group()
-    grp.add_argument("--auto-mode", type=str, action="append", default=None,
-        help="Auto-detect direction rule, repeatable, e.g. --auto-mode all2zh-cn --auto-mode zh-cn2en")
-    grp.add_argument("--input", type=str, default=None,
-        help="Source language (ISO code or English name, e.g. en or English)")
-    parser.add_argument("--output", type=str, default=None,
-        help="Target language (ISO code or English name, e.g. zh or Chinese); required with --input")
-    parser.add_argument("--model", type=str, required=True, help="Model name sent to server")
-    parser.add_argument("--prompt", type=str, default="quick", choices=list(PROMPTS.keys()), help="Prompt preset (default: quick)")
+    grp.add_argument(
+        "--auto-mode",
+        type=str,
+        action="append",
+        default=None,
+        help="Auto-detect direction rule, repeatable, e.g. --auto-mode all2zh-cn --auto-mode zh-cn2en",
+    )
+    grp.add_argument(
+        "--input",
+        type=str,
+        default=None,
+        help="Source language (ISO code or English name, e.g. en or English)",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Target language (ISO code or English name, e.g. zh or Chinese); required with --input",
+    )
+    parser.add_argument(
+        "--model", type=str, required=True, help="Model name sent to server"
+    )
+    parser.add_argument(
+        "--prompt",
+        type=str,
+        default="quick",
+        choices=list(PROMPTS.keys()),
+        help="Prompt preset (default: quick)",
+    )
 
     parser.add_argument("--html", action="store_true", help="Output in HTML format")
-    parser.add_argument("--original-text", action="store_true", help="Append original text")
+    parser.add_argument(
+        "--original-text", action="store_true", help="Append original text"
+    )
     parser.add_argument("text", nargs="*", default="", help="Input text")
 
     args = parser.parse_args()
 
     if args.input and not args.output:
         if not args.silent:
-            print("Error: --output is required when --input is specified", file=sys.stderr)
+            print(
+                "Error: --output is required when --input is specified", file=sys.stderr
+            )
         sys.exit(1)
 
     input_text = ""
@@ -260,7 +295,12 @@ def main():
         result = resolve_direction(input_text, directions)
         if not result:
             if not args.silent:
-                print("Error: No matching auto-mode direction for detected language", file=sys.stderr)
+                detected = detect_lang(input_text)
+                print(
+                    f"Error: No matching auto-mode direction for detected language '{detected}'. "
+                    f"Add a rule such as --auto-mode {detected}2zh-cn or --auto-mode all2zh-cn",
+                    file=sys.stderr,
+                )
             sys.exit(1)
         src, tgt = result
     elif args.input:
@@ -280,7 +320,13 @@ def main():
 
     try:
         translated = translate_multiline(
-            input_text, args.model, args.host.rstrip("/"), prompt_template, src, tgt, args.timeout
+            input_text,
+            args.model,
+            args.host.rstrip("/"),
+            prompt_template,
+            src,
+            tgt,
+            args.timeout,
         )
     except Exception as e:
         handle_llm_error(e, args.silent, host=args.host)

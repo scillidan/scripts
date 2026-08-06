@@ -11,9 +11,23 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="repla
 
 
 BAD_CHARS = [
-    "\x00", "\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07",
-    "\x08", "\x0b", "\x0c", "\x0e", "\x0f",
-    "\u200b", "\u200c", "\u200d", "\ufeff",
+    "\x00",
+    "\x01",
+    "\x02",
+    "\x03",
+    "\x04",
+    "\x05",
+    "\x06",
+    "\x07",
+    "\x08",
+    "\x0b",
+    "\x0c",
+    "\x0e",
+    "\x0f",
+    "\u200b",
+    "\u200c",
+    "\u200d",
+    "\ufeff",
 ]
 
 
@@ -48,24 +62,29 @@ def safe_json_dumps(obj: dict, ensure_ascii: bool = False) -> str:
 
 
 def read_input_with_encoding(fileobj) -> str:
+    data = fileobj.buffer.read()
+    if not data:
+        return ""
+    if data.startswith(b"\xff\xfe") or data.startswith(b"\xfe\xff"):
+        return data.decode("utf-16")
+    if data.startswith(b"\xef\xbb\xbf"):
+        return data[3:].decode("utf-8")
     try:
-        return fileobj.buffer.read().decode("utf-8")
+        return data.decode("utf-8")
     except UnicodeDecodeError:
-        try:
-            fileobj.buffer.seek(0)
-            bom = fileobj.buffer.read(2)
-            fileobj.buffer.seek(0)
-            if bom in (b"\xff\xfe", b"\xfe\xff"):
-                return fileobj.buffer.read().decode("utf-16")
+        pass
+    if data.count(b"\x00") > len(data) // 4:
+        for enc in ("utf-16-le", "utf-16-be"):
             try:
-                fileobj.buffer.seek(0)
-                return fileobj.buffer.read().decode("utf-16-le")
-            except Exception:
-                fileobj.buffer.seek(0)
-                return fileobj.buffer.read().decode("utf-16-be")
-        except Exception:
-            fileobj.buffer.seek(0)
-            return fileobj.buffer.read().decode("latin-1", errors="replace")
+                return data.decode(enc)
+            except UnicodeDecodeError:
+                continue
+    for enc in ("cp936", "gb18030"):
+        try:
+            return data.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    return data.decode("latin-1", errors="replace")
 
 
 def read_stdin(silent: bool = False) -> str:
@@ -130,7 +149,9 @@ def format_html(main_text: str, original: Optional[str] = None) -> str:
         parts.append('<div style="margin: 0; padding: 0;">')
         for i, line in enumerate(orig_lines):
             if line.strip():
-                parts.append(f'<p style="margin: 0; padding: 0; color: #666">{line}</p>')
+                parts.append(
+                    f'<p style="margin: 0; padding: 0; color: #666">{line}</p>'
+                )
             elif i < len(orig_lines) - 1:
                 parts.append('<p style="margin: 0; padding: 0">&nbsp;</p>')
         parts.append("</div>")
@@ -146,10 +167,19 @@ def emit(text: str, utf16: bool = False):
 
 
 def add_common_cli(parser):
-    parser.add_argument("--host", type=str, required=True, help="llama.cpp server host, e.g. http://127.0.0.1:8080")
-    parser.add_argument("--timeout", type=int, default=30, help="Request timeout in seconds")
+    parser.add_argument(
+        "--host",
+        type=str,
+        required=True,
+        help="llama.cpp server host, e.g. http://127.0.0.1:8080",
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=30, help="Request timeout in seconds"
+    )
     parser.add_argument("--stdin", action="store_true", help="Read input from stdin")
-    parser.add_argument("--debug", action="store_true", help="Show debug info on stderr")
+    parser.add_argument(
+        "--debug", action="store_true", help="Show debug info on stderr"
+    )
     parser.add_argument("--silent", action="store_true", help="Suppress error messages")
 
 
