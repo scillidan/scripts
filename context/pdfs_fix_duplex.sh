@@ -2,6 +2,11 @@
 # Fix PDF page order from non-duplex scanning (2-file mode)
 # Select exactly 2 PDFs -> sorted alphabetically: A=odd pages, B=even pages
 #
+# Input page order (scanner feeds the top sheet, ejects to the bottom):
+#   A.pdf: 01, 03, 05, ... 101, 103   (odd pages, ascending)
+#   B.pdf: 102, 100, ... 04, 02       (even pages, reversed by scanner)
+#   Result: 01, 02, 03, ... 102, 103
+#
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
@@ -40,8 +45,8 @@ echo ""
 
 if uv run "$SCRIPT_DIR/lib/pdf_fix_duplex.py" "$1" "$2"; then
     echo ""
-    printf "All done. "
-    read -t 3 -p "Closing in 3s..." 2>/dev/null || echo ""
+    echo "Done. Press Enter to exit..."
+    read
 else
     echo "Press Enter to exit..."
     read
