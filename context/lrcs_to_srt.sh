@@ -17,17 +17,15 @@ PY_SCRIPT="$SCRIPT_DIR/lib/lrc_to_srt.py"
 
 error=0
 
-python "$SCRIPT"
-
 for file in "$@"; do
-    output="${file%.*}.srt"
-    if ! python "$PY_SCRIPT" "$file" "$output"; then
-        echo "Error: Failed to convert $file"
-        error=1
-    fi
+	output="${file%.*}.srt"
+	if ! python "$PY_SCRIPT" "$file" "$output"; then
+		echo "Error: Failed to convert $file"
+		error=1
+	fi
 done
 
 if [ $error -ne 0 ]; then
-    echo "Press Enter to exit..."
-    read
+	echo "Press Enter to exit..."
+	read
 fi
