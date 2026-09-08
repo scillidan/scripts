@@ -37,16 +37,26 @@ delete_source() {
     fi
     if command -v gio >/dev/null 2>&1; then
         gio trash "$target" 2>/dev/null
-    elif [ "$(uname -s)" = "MINGW"* ] || [ "$(uname -s)" = "MSYS"* ]; then
-        powershell -NoProfile -Command "
-            \$shell = New-Object -ComObject Shell.Application
-            foreach (\$item in \$args) {
-                \$fso = Get-Item -LiteralPath \$item
-                \$folder = \$shell.NameSpace(\$fso.DirectoryName)
-                \$folder.ParseName(\$fso.Name).InvokeVerb('delete')
-            }
-        " -- "$target" 2>/dev/null
+        return $?
     fi
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*)
+            winpath="$target"
+            if command -v cygpath >/dev/null 2>&1; then
+                winpath=$(cygpath -w "$target")
+            fi
+            escaped=$(printf "%s" "$winpath" | sed "s/'/''/g")
+            if [ -d "$target" ]; then
+                method="DeleteDirectory"
+            else
+                method="DeleteFile"
+            fi
+            powershell -NoProfile -Command \
+                "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::$method('$escaped','OnlyErrorDialogs','SendToRecycleBin')" 2>/dev/null
+            return $?
+            ;;
+    esac
+    return 1
 }
 
 probe_archive() {
@@ -109,7 +119,7 @@ extract_archive() {
     if 7z x -p"" -o"$target_dir" -y $cp_opts "$archive" >/dev/null 2>&1; then
         echo "Extracted"
         if [ "$DELETE_SOURCE_AFTER" = true ]; then
-            delete_source "$archive"
+            delete_source "$archive" || echo "Warning: Could not move $(basename "$archive") to recycle bin"
         fi
     else
         echo "Error: Failed to extract $archive (possibly password-protected or corrupted)"
@@ -167,7 +177,7 @@ create_archive() {
         if [ $? -eq 0 ]; then
             echo "OK"
             if [ "$DELETE_SOURCE_AFTER" = true ]; then
-                delete_source "$item"
+                delete_source "$item" || echo "Warning: Could not move $(basename "$item") to recycle bin"
             fi
         else
             echo "Error"
@@ -188,7 +198,7 @@ create_archive() {
         if 7z a "$output" "$item" >/dev/null 2>&1; then
             echo "OK"
             if [ "$DELETE_SOURCE_AFTER" = true ]; then
-                delete_source "$item"
+                delete_source "$item" || echo "Warning: Could not move $(basename "$item") to recycle bin"
             fi
         else
             echo "Error"
@@ -230,7 +240,7 @@ create_combined_archive() {
         echo "OK"
         if [ "$DELETE_SOURCE_AFTER" = true ]; then
             for f in "$@"; do
-                delete_source "$f"
+                delete_source "$f" || echo "Warning: Could not move $(basename "$f") to recycle bin"
             done
         fi
     else

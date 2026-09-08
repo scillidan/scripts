@@ -21,16 +21,26 @@ delete_source() {
     fi
     if command -v gio >/dev/null 2>&1; then
         gio trash "$target" 2>/dev/null
-    elif [ "$(uname -s)" = "MINGW"* ] || [ "$(uname -s)" = "MSYS"* ]; then
-        powershell -NoProfile -Command "
-            \$shell = New-Object -ComObject Shell.Application
-            foreach (\$item in \$args) {
-                \$fso = Get-Item -LiteralPath \$item
-                \$folder = \$shell.NameSpace(\$fso.DirectoryName)
-                \$folder.ParseName(\$fso.Name).InvokeVerb('delete')
-            }
-        " -- "$target" 2>/dev/null
+        return $?
     fi
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*)
+            winpath="$target"
+            if command -v cygpath >/dev/null 2>&1; then
+                winpath=$(cygpath -w "$target")
+            fi
+            escaped=$(printf "%s" "$winpath" | sed "s/'/''/g")
+            if [ -d "$target" ]; then
+                method="DeleteDirectory"
+            else
+                method="DeleteFile"
+            fi
+            powershell -NoProfile -Command \
+                "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::$method('$escaped','OnlyErrorDialogs','SendToRecycleBin')" 2>/dev/null
+            return $?
+            ;;
+    esac
+    return 1
 }
 
 format_size() {
@@ -147,9 +157,13 @@ case "$replace" in
             esac
             optimized="${dir}/_yoga_${name}${outext}"
             if [ -f "$optimized" ]; then
-                delete_source "$file"
-                mv "$optimized" "$file" 2>/dev/null
-                echo "  Replaced: $base"
+                if delete_source "$file"; then
+                    mv "$optimized" "$file" 2>/dev/null
+                    echo "  Replaced: $base"
+                else
+                    echo "  Error: Could not move $base to recycle bin; original kept ($optimized left alongside)"
+                    error=1
+                fi
             fi
         done
         echo "Done."
