@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pypdf"]
+# dependencies = ["pypdf", "cryptography"]
 # ///
 
 # Extract selected pages from PDFs into one new PDF per input file.
