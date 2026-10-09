@@ -1,4 +1,4 @@
-start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Ditto.lnk"
+start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\CopyQ.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Keyboard Auto Switch Back.lnk"
 timeout /t 1 /nobreak >nul
