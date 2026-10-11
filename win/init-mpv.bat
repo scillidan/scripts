@@ -111,7 +111,7 @@ for %%d in (%CONFIG_GLOBAL%) do (
     mklink "%%d\script-opts\autosubsync.conf" "%MPV_CONF%\script-opts\autosubsync.conf"
 
     rem git clone --depth=1 https://github.com/zenwarr/mpv-config mpv-config@zenwarr
-    mklink "%%d\scripts\restore-subtitles.lua" "%MPV_SRC%\mpv-config@zenwarr\scripts\restore-subtitles.lua"
+    rem mklink "%%d\scripts\restore-subtitles.lua" "%MPV_SRC%\mpv-config@zenwarr\scripts\restore-subtitles.lua"
 
     rem git clone --depth=1 https://github.com/pzim-devdata/mpv-scripts mpv-scripts@pzim-devdata
     mklink "%%d\scripts\mpv-sub_not_forced_not_sdh.lua" "%MPV_SRC%\mpv-scripts@pzim-devdata\mpv-sub_not_forced_not_sdh.lua"
