@@ -23,6 +23,7 @@ URLS=(
 	# Book
 	["annas-archive.org"]="https://annas-archive.org/search?index=&page=1&sort=&display=&q="
 	["douban.com"]="https://www.douban.com/search?q="
+	["pdc.capub.cn"]="https://pdc.capub.cn/search.html#/quick?type=%E5%9B%BE%E4%B9%A6&search="
 	["worldcat.org"]="https://search.worldcat.org/search?offset=1&q="
 	# Dictionary
 	["allacronyms.com"]="https://www.allacronyms.com/aa-searchme?q="
