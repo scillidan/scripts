@@ -4,10 +4,10 @@ Windows Registry Editor Version 5.00
 @="open"
 
 [HKEY_CLASSES_ROOT\Drive\shell\open\command]
-@="\"C:\\Users\\User\\Scoop\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
+@="\"%%SCOOP%%\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
 
 [HKEY_CLASSES_ROOT\Directory\shell]
 @="open"
 
 [HKEY_CLASSES_ROOT\Directory\shell\open\command]
-@="\"C:\\Users\\User\\Scoop\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
+@="\"%%SCOOP%%\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""

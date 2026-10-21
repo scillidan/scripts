@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\OpenDesktopPlusHere]
+@="Open Desktop Plus Here"
+"Icon"="%%SCOOP%%\\apps\\desktop-plus\\current\\DesktopPlus.exe"
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\OpenDesktopPlusHere\command]
+@="\"%%LOCALAPPDATA%%\\DesktopPlus\\bin\\desktop-plus-cli.bat\" \"%V\""

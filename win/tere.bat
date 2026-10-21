@@ -1,6 +1,5 @@
 @echo off
 
-rem set the location/path of the tere executable here...
 SET TereEXE=tere.exe
 
 rem clear ENABLE_VIRTUAL_TERMINAL_INPUT if a previous program (e.g. a killed
