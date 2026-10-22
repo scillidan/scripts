@@ -6,7 +6,7 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > subliminal_vids
+#     Select files > Right-click > Send To > vids_subliminal
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F

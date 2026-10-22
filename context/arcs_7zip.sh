@@ -6,7 +6,7 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select archives/files/folders > Right-click > Send To > smartzip
+#     Select archives/files/folders > Right-click > Send To > arcs_7zip
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F

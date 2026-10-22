@@ -5,7 +5,7 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > ffmpeg_fix_thumber
+#     Select files > Right-click > Send To > vids_fix_thumb
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F

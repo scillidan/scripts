@@ -4,13 +4,13 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > presse_pdfs
+#     Select files > Right-click > Send To > pdfs_presse
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
 #
 #   Command line:
-#     ./presse_pdfs.sh <pdf1> <pdf2> ...
+#     ./script.sh <pdf1> <pdf2> ...
 
 readonly DEFAULT_QUALITY=80
 

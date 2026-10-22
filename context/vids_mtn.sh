@@ -1,10 +1,10 @@
 #!/bin/sh
-# Generate animated video contact sheets
+# Generate thumbnails (screenshots) from video files
 #
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > vimg_files
+#     Select files > Right-click > Send To > vids_mtn
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
@@ -22,9 +22,8 @@ fi
 error=0
 
 for file in "$@"; do
-    dir="$(dirname "$file")"
-    if ! (cd "$dir" && vimg vcs -c4 -n16 -H270 --avif-fps=20 "$file"); then
-        echo "Error: Failed to process $file"
+    if ! mtn -c 4 -r 4 -w 1920 -g 8 -k ffffff -b 0.80 -D 12 -i -t -j 90 -o _thumb.jpg -Z -P "$file"; then
+        echo "Error: Failed to generate thumbnails for $file"
         error=1
     fi
 done
@@ -33,5 +32,3 @@ if [ $error -ne 0 ]; then
     echo "Press Enter to exit..."
     read
 fi
-
-exit $error

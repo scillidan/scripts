@@ -4,7 +4,7 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > yoga_jpgs_pngs
+#     Select files > Right-click > Send To > imgs_yoga
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F

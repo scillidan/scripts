@@ -15,7 +15,7 @@
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select .md/.txt files > Right-click > Send To > llm_trans_md
+#     Select .md/.txt files > Right-click > Send To > md_llm_trans
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F

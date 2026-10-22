@@ -7,6 +7,7 @@ description: Use when working with the POSIX sh batch/SendTo scripts in scripts/
 
 ## Rules
 
+- **Naming:** `<format>_<action-or-tool>.<ext>` — format first, never tool first (`imgs_rimage.sh`, `vids_mtn.sh`, `pdfs_presse.sh`).
 - **Shebang:** `#!/bin/sh`
 - **Error tracking:** `error=0` → set to 1 on failure → `exit $error` at end. Always `continue` after error.
 - **Pause logic:** Info scripts (print results to user) → always pause before exit so user can read output. Transform scripts (convert/modify files) → pause only on error (`if [ $error -ne 0 ]; then echo "..."; read; fi`).
