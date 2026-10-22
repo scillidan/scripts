@@ -1,8 +1,8 @@
 #!/bin/bash
 
-MPVC_VIDEO="$HOME/Usr/Data/mpvc_video"
-MPVC_MUSIC="$HOME/Usr/Data/mpvc_music"
-MPVC_MANGA="$HOME/Usr/Data/mpvc_manga"
+MPVC_VIDEO="$USERHOME/Usr/Data/mpvc_video"
+MPVC_MUSIC="$USERHOME/Usr/Data/mpvc_music"
+MPVC_MANGA="$USERHOME/Usr/Data/mpvc_manga"
 
 config="$1"
 

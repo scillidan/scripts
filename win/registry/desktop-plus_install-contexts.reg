@@ -1,8 +1,15 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\OpenDesktopPlusHere]
-@="Open Desktop Plus Here"
-"Icon"="%%SCOOP%%\\apps\\desktop-plus\\current\\DesktopPlus.exe"
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\Open with &DesktopPlus]
+@="Open with &DesktopPlus"
+"Icon"="C:\\Users\\User\\Scoop\\apps\\desktop-plus\\current\\DesktopPlus.exe"
 
-[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\OpenDesktopPlusHere\command]
-@="\"%%LOCALAPPDATA%%\\DesktopPlus\\bin\\desktop-plus-cli.bat\" \"%V\""
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\Open with &DesktopPlus\command]
+@="\"C:\\Users\\User\\Scoop\\shims\\desktop-plus-cli.cmd\" \"%V\""
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\Background\shell\Open with &DesktopPlus]
+@="Open with &DesktopPlus"
+"Icon"="C:\\Users\\User\\Scoop\\apps\\desktop-plus\\current\\DesktopPlus.exe"
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\Background\shell\Open with &DesktopPlus\command]
+@="\"C:\\Users\\User\\Scoop\\shims\\desktop-plus-cli.cmd\" \"%V\""

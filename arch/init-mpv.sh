@@ -6,14 +6,14 @@
 #   4. Usage as `mpvc video $*`
 
 # Set configurations
-MPV_DOTDIR="$HOME/.config/mpv"
-MPV_CONF="$HOME/.config/_mpv"
-MPV_SRC="$HOME/Usr/Source/mpv"
-MPV_DL="$HOME/Usr/Download/mpv"
+MPV_DOTDIR="$USERHOME/.config/mpv"
+MPV_CONF="$USERHOME/.config/_mpv"
+MPV_SRC="$USERHOME/Usr/Source/mpv"
+MPV_DL="$USERHOME/Usr/Download/mpv"
 
-MPVC_VIDEO="$HOME/Usr/Data/mpvc_video"
-MPVC_MANGA="$HOME/Usr/Data/mpvc_manga"
-MPVC_MUSIC="$HOME/Usr/Data/mpvc_music"
+MPVC_VIDEO="$USERHOME/Usr/Data/mpvc_video"
+MPVC_MANGA="$USERHOME/Usr/Data/mpvc_manga"
+MPVC_MUSIC="$USERHOME/Usr/Data/mpvc_music"
 MPVC_ALL="$MPVC_VIDEO $MPVC_MANGA $MPVC_MUSIC"
 
 # Create directories

@@ -1,11 +1,11 @@
 #!/bin/bash
 # Personal setup script
 
-PEGASUS_HOME="$HOME/<path_to>/pegasus"
-RETROARCH_HOME="$HOME/<path_to>/retroarch"
-PEGASUS_CONF="$HOME/Usr/File/file_pegasus-frontend"
-PEGASUS_SRC="$HOME/Usr/Source/pegasus"
-PEGASUS_DL="$HOME/Usr/Download/pegasus"
+PEGASUS_HOME="$USERHOME/<path_to>/pegasus"
+RETROARCH_HOME="$USERHOME/<path_to>/retroarch"
+PEGASUS_CONF="$USERHOME/Usr/File/file_pegasus-frontend"
+PEGASUS_SRC="$USERHOME/Usr/Source/pegasus"
+PEGASUS_DL="$USERHOME/Usr/Download/pegasus"
 
 rm -rf "$PEGASUS_HOME/RetroArch"
 ln -s "$RETROARCH_HOME" "$PEGASUS_HOME/RetroArch"

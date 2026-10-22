@@ -17,7 +17,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-BASE_DIR="$HOME"
+BASE_DIR="$USERHOME"
 VENV_ACT=".venv/bin/activate"
 
 pushd "$BASE_DIR/Local/OptAud/Kokoro-FastAPI" || exit 1

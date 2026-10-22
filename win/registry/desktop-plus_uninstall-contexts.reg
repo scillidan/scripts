@@ -1,3 +1,6 @@
 Windows Registry Editor Version 5.00
 
-[-HKEY_CLASSES_ROOT\Directory\Background\shell\OpenDesktopPlusHere]
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\Open with &DesktopPlus]
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\Open with &DesktopPlus\command]
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\Background\shell\Open with &DesktopPlus]
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\Background\shell\Open with &DesktopPlus\command]
