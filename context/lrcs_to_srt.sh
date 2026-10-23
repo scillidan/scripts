@@ -13,7 +13,7 @@
 #     ./script.sh <lrc1> <lrc2> ...
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/lrc_to_srt.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/lrcs_to_srt.py"
 
 error=0
 

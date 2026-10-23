@@ -43,7 +43,7 @@ done
 echo "Fixing duplex order..."
 echo ""
 
-if uv run "$SCRIPT_DIR/lib/pdf_fix_duplex.py" "$1" "$2"; then
+if uv run "$SCRIPT_DIR/lib/pdfs_fix_duplex.py" "$1" "$2"; then
     echo ""
     echo "Done. Press Enter to exit..."
     read

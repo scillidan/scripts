@@ -1,7 +1,15 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_CLASSES_ROOT\Directory\shell\open\command]
-@=""
+; Undo double-commander_set_default.reg: remove the per-user override so the
+; system defaults apply again (Explorer opens folders and drives).
+; Only touches HKCU\Software\Classes - HKLM defaults stay untouched.
 
-[HKEY_CLASSES_ROOT\Drive\shell\open\command]
-@=""
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell]
+@="none"
+
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\open]
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Drive\shell]
+@="none"
+
+[-HKEY_CURRENT_USER\SOFTWARE\Classes\Drive\shell\open]

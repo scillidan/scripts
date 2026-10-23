@@ -13,7 +13,7 @@
 #     ./script.sh <srt1> <srt2> ...
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/srt_to_vtt.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/srts_to_vtt.py"
 
 if [ $# -eq 0 ]; then
 	echo "Error: No files selected"

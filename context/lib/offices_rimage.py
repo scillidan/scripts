@@ -6,7 +6,7 @@
 # Inspired by https://github.com/cometeme/compress-office
 # Authors: GLM-5.1🧙‍♂️, scillidan🤡
 # Usage:
-#   uv run lib/rimage_office.py <file> [-o OUTPUT] [-q QUALITY] [-e EFFORT] [-t WORKERS]
+#   uv run lib/offices_rimage.py <file> [-o OUTPUT] [-q QUALITY] [-e EFFORT] [-t WORKERS]
 #   -o, --output   Output file path (default: <dir>/_<name>)
 #   -q, --quality  JPEG quality (default: 75)
 #   -e, --effort   Oxipng effort level (default: 2)

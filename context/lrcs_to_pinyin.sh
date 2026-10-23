@@ -18,7 +18,7 @@ if [ -n "${BASH_VERSION:-}" ] && [ -n "${BLE_VERSION:-}" ] && [ -z "${LRC_PINYIN
 fi
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/lrc_to_pinyin.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/lrcs_to_pinyin.py"
 
 if ! command -v uv >/dev/null 2>&1; then
 	echo "Error: uv not found (https://docs.astral.sh/uv/)"

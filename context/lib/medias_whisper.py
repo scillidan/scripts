@@ -3,7 +3,7 @@
 # dependencies = []
 # ///
 
-# Subtitle post-processing for whisper_medias.sh
+# Subtitle post-processing for medias_whisper.sh
 # Commands:
 #   fix <srt>       — fix zero-duration entries, split long lines (>30 chars)
 #   nopunc <src> <dst> — strip punctuation to spaces (for TTS)
@@ -181,7 +181,7 @@ def cmd_fix(args):
         i += 1
 
     if not files:
-        print("Usage: python whisper_medias.py fix <srt_file> [--max-chars N]")
+        print("Usage: python medias_whisper.py fix <srt_file> [--max-chars N]")
         return 1
 
     for filepath in files:
@@ -224,7 +224,7 @@ def strip_punctuation_srt(content):
 
 def cmd_nopunc(args):
     if len(args) < 2:
-        print("Usage: python whisper_medias.py nopunc <input.srt> <output.srt>")
+        print("Usage: python medias_whisper.py nopunc <input.srt> <output.srt>")
         return 1
     src, dst = args[0], args[1]
     with open(src, "r", encoding="utf-8-sig", errors="replace") as f:
@@ -241,8 +241,8 @@ def cmd_nopunc(args):
 def main():
     if len(sys.argv) < 3:
         print("Usage:")
-        print("  python whisper_medias.py fix <srt_file> [--max-chars N]")
-        print("  python whisper_medias.py nopunc <input.srt> <output.srt>")
+        print("  python medias_whisper.py fix <srt_file> [--max-chars N]")
+        print("  python medias_whisper.py nopunc <input.srt> <output.srt>")
         sys.exit(1)
 
     cmd = sys.argv[1]

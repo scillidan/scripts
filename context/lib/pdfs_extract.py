@@ -8,7 +8,7 @@
 #   1 ; 1-3 ; 1,3 ; 1,3-5,8
 #
 # Usage:
-#   uv run lib/pdf_extract.py -p "1-3,5" <pdf1> <pdf2> ...
+#   uv run lib/pdfs_extract.py -p "1-3,5" <pdf1> <pdf2> ...
 #   -p, --pages   Pages to extract (e.g. "1", "1-3", "1,3")
 #   Output: <stem>_p<pages>.pdf next to each input
 #   If the output file already exists, asks to overwrite (n/Y).

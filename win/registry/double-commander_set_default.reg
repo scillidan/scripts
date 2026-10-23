@@ -1,13 +1,25 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_CLASSES_ROOT\Drive\shell]
+; Make Double Commander the "open" handler for folders and drives (per-user, no admin).
+;
+; WARNING: this hijacks ALL folder opens system-wide for this user, including
+; double-clicks inside an open Explorer window (Directory\shell\open is the
+; system folder verb). There is no middle ground via this key - that is why
+; Explorer appeared "forced". If you only want a right-click entry, prefer
+; desktop-plus_install-contexts.reg instead.
+;
+; Path is absolute: environment variables like %SCOOP% do NOT expand in .reg
+; REG_SZ values. Double Commander ignores extra instances and opens the path
+; in the left panel (-P L) of a new tab (-T).
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell]
 @="open"
 
-[HKEY_CLASSES_ROOT\Drive\shell\open\command]
-@="\"%%SCOOP%%\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Directory\shell\open\command]
+@="\"C:\\Users\\User\\Scoop\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
 
-[HKEY_CLASSES_ROOT\Directory\shell]
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Drive\shell]
 @="open"
 
-[HKEY_CLASSES_ROOT\Directory\shell\open\command]
-@="\"%%SCOOP%%\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""
+[HKEY_CURRENT_USER\SOFTWARE\Classes\Drive\shell\open\command]
+@="\"C:\\Users\\User\\Scoop\\apps\\doublecmd\\current\\doublecmd.exe\" -P L -T \"%1\""

@@ -1,33 +1,3 @@
 @echo off
-
-setlocal
-
-rem Custom user environment variables here
-set "MPVC_VIDEO=%USERHOME%\Local\Data\mpvc_video"
-set "MPVC_MUSIC=%USERHOME%\Local\Data\mpvc_music"
-set "MPVC_MANGA=%USERHOME%\Local\Data\mpvc_manga"
-
-set "config=%1"
-
-if "%config%"=="video" (
-    set "CONFIG_DIR=%MPVC_VIDEO%"
-    goto :mpvc
-) else if "%config%"=="music" (
-    set "CONFIG_DIR=%MPVC_MUSIC%"
-    goto :mpvc
-) else if "%config%"=="manga" (
-    set "CONFIG_DIR=%MPVC_MANGA%"
-    goto :mpvc
-) else (
-    echo Invalid config
-    goto :end
-)
-
-:mpvc
-start "" mpv.exe --config-dir="%CONFIG_DIR%" --force-window --keep-open=yes %2
-goto :end
-
-:end
-endlocal
-
-exit /b
+rem Thin cmd wrapper: the real script is the cross-platform mpvc.sh at the repo root.
+bash "%~dp0..\mpvc.sh" %*

@@ -13,7 +13,7 @@
 #     ./script.sh <srt1> <srt2> ... <dir1> <dir2> ...
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/srt_punc_to_spc.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/srts_punc_to_spc.py"
 
 if [ $# -eq 0 ]; then
 	echo "Error: No files or folders selected"

@@ -12,7 +12,7 @@
 #   Result: 01, 02, 03, ... 102, 103
 #
 # Usage:
-#   uv run lib/pdf_fix_duplex.py <pdf1> <pdf2> [-o OUTPUT]
+#   uv run lib/pdfs_fix_duplex.py <pdf1> <pdf2> [-o OUTPUT]
 #   pdf1, pdf2: sorted alphabetically -> pdf1=odd, pdf2=even
 #   -o, --output   Output file path (default: <pdf1_stem>_fixed.pdf)
 #   If the output file already exists, asks to overwrite (n/Y).

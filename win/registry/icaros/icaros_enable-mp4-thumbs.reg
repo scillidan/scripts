@@ -1,0 +1,34 @@
+Windows Registry Editor Version 5.00
+
+; Fix Icaros thumbnails for .mp4/.m4v/.mov (REQUIRES ADMIN - HKLM).
+;
+; Symptom: only some mp4 files show thumbnails (the ones Windows' built-in
+; Media Foundation provider handles, e.g. H.264), embedded cover art ignored.
+; Cause: the extension is missing from HKLM\Software\Icaros "Thumbnail
+; Extensions" (can be lost on Icaros reinstall - the GUI checkbox alone may
+; fail to persist without elevation), leaving empty HKCR\.ext\shellex keys.
+;
+; This file appends .mp4;.m4v;.mov to the extension list and registers the
+; Icaros thumbnail provider for each. After import, clear stale caches:
+; IcarosConfig -> Tools -> Clear thumbnail cache, or restart Explorer.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Icaros]
+"Thumbnail Extensions"=".mkv;.mk3d;.webm;.ogm;.ogv;.flv;.rm;.rmvb;.xvid;.divx;.mp4;.m4v;.mov;.flac;.ogg;.opus;.ape;.mpc;.mka;.ofr;.ofs;.spx;.tak;.tta;.wav;.wv;.cbz;.cbr;.cb7;.epub;.mxf;.psd"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mp4\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mp4\shellex\{e357fccd-a995-4576-b01f-234630154e96}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.m4v\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.m4v\shellex\{e357fccd-a995-4576-b01f-234630154e96}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mov\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mov\shellex\{e357fccd-a995-4576-b01f-234630154e96}]
+@="{c5aec3ec-e812-4677-a9a7-4fee1f9aa000}"

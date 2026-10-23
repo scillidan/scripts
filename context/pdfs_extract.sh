@@ -15,7 +15,7 @@
 #     ./script.sh <pdf1> <pdf2> ...
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/pdf_extract.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/pdfs_extract.py"
 
 error=0
 

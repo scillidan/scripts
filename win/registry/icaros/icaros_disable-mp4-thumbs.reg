@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+; Undo icaros_enable-mp4-thumbs.reg (REQUIRES ADMIN - HKLM): remove
+; .mp4/.m4v/.mov from Icaros and delete their provider registrations, back
+; to the pre-fix state (Windows built-in provider only).
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Icaros]
+"Thumbnail Extensions"=".mkv;.mk3d;.webm;.ogm;.ogv;.flv;.rm;.rmvb;.xvid;.divx;.flac;.ogg;.opus;.ape;.mpc;.mka;.ofr;.ofs;.spx;.tak;.tta;.wav;.wv;.cbz;.cbr;.cb7;.epub;.mxf;.psd"
+
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mp4\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mp4\shellex\{e357fccd-a995-4576-b01f-234630154e96}]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.m4v\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.m4v\shellex\{e357fccd-a995-4576-b01f-234630154e96}]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mov\shellex\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.mov\shellex\{e357fccd-a995-4576-b01f-234630154e96}]

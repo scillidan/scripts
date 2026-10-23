@@ -27,7 +27,7 @@ for file in "$@"; do
     case "$ext" in
         .docx|.DOCX|.pptx|.PPTX|.xlsx|.XLSX)
             echo "Processing: $file"
-            if ! uv run "$SCRIPT_DIR/lib/rimage_office.py" "$file"; then
+            if ! uv run "$SCRIPT_DIR/lib/offices_rimage.py" "$file"; then
                 error=1
             fi
             ;;

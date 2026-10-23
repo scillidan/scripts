@@ -7,7 +7,7 @@
 # ]
 # ///
 
-# llm_trans_md — Translate Markdown/TXT files via local LLM, preserving formatting
+# md_llm_trans — Translate Markdown/TXT files via local LLM, preserving formatting
 #
 # Markdown placeholder/tokenization strategy adapted from:
 #   https://github.com/rockbenben/md-translator

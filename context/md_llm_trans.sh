@@ -4,7 +4,7 @@
 # Markdown placeholder/tokenization strategy adapted from:
 #   https://github.com/rockbenben/md-translator
 #
-# Model language support (see lib/llm_trans_md.py for full list):
+# Model language support (see lib/md_llm_trans.py for full list):
 #   gemma-3-12b-it        https://ai.google.dev/gemma/core/cards/gemma-3  (140+)
 #   translategemma-12b-it-i1  https://ai.google.dev/gemma/core/translate-gemma (~30)
 #
@@ -211,7 +211,7 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 error=0
 
 for file in "$@"; do
-	if ! uv run "$script_dir/lib/llm_trans_md.py" \
+	if ! uv run "$script_dir/lib/md_llm_trans.py" \
 		--host "http://127.0.0.1:8010" \
 		--model "$MODEL" \
 		--src-lang "$SRC_LANG" \

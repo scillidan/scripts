@@ -5,7 +5,7 @@
 # ]
 # ///
 
-# fonttools_ttfs — Print TTF font metadata (font-family, font-weight, font-style)
+# ttfs_fonttools — Print TTF font metadata (font-family, font-weight, font-style)
 
 SHOW_COPYRIGHT = False
 SHOW_VERSION = False
@@ -65,7 +65,7 @@ def get_font_style(ttf):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python fonttools_ttfs.py <ttf_file> [ttf_file ...]")
+        print("Usage: python ttfs_fonttools.py <ttf_file> [ttf_file ...]")
         sys.exit(1)
 
     error = 0

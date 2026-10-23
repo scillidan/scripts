@@ -17,7 +17,7 @@ script_dir="$(dirname "$(readlink -f "$0")")"
 
 for file in "$@"; do
 	if [ -f "$file" ]; then
-		if ! python "$script_dir/lib/fonttools_ttfs.py" "$file"; then
+		if ! python "$script_dir/lib/ttfs_fonttools.py" "$file"; then
 			echo "Error: Failed to process $file"
 			error=1
 		fi
