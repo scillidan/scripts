@@ -10,7 +10,10 @@ rem --------------------------------------------------------------------------
 setlocal
 
 rem -- rg flags (2>&1 surfaces option errors inside fzf).
+rem    Optional extra filters via env, e.g.  set FZF_RG_EXTRA=-g *.py -g "!**/dist/**"
+rem    (globs only; & | > < in the value would break cmd parsing).
 set "RG=rg.exe --hidden --follow --glob "!.git" --column --line-number --no-heading --color=always --smart-case 2>&1"
+if defined FZF_RG_EXTRA set "RG=%RG% %FZF_RG_EXTRA%"
 
 rem -- Reload guard: echo {q}| is exactly 2 chars when empty; findstr needs 3+.
 rem    Skip rg on empty query, and "|| ver >nul" clears errorlevel so fzf
