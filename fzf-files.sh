@@ -16,7 +16,7 @@ BIND_TOGGLE_PREVIEW="--bind 'ctrl-\\:change-preview-window(up,60%,border-bottom,
 PREVIEW="--preview 'bash ${SCRIPT_DIR}/fzf_preview.sh {}'"
 PREVIEW_WINDOW="--preview-window 'right,60%,wrap,~2'"
 
-FZF_CMD="fzf $FLAG $BIND_NAVIGATE $BIND_SELECT $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_TOGGLE_PREVIEW $PREVIEW $PREVIEW_WINDOW"
+FZF_CMD="fzf $FLAG $BIND_NAVIGATE $BIND_SELECT $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_DCMD $BIND_TOGGLE_PREVIEW $PREVIEW $PREVIEW_WINDOW"
 
 expand_path() {
 	local path="$1"
@@ -58,6 +58,7 @@ show_usage() {
 	echo "  Ctrl-A       Select all"
 	echo "  Ctrl-D       Deselect all"
 	echo "  Enter        Copy selected to clipboard"
+	echo "  Ctrl-T       Open in Double Commander"
 	echo "  Alt-P        Preview page up"
 	echo "  Alt-N        Preview page down"
 	echo "  Ctrl-\\       Toggle preview position"

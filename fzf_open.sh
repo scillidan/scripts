@@ -21,6 +21,13 @@ if [[ ${#files[@]} -gt 1 ]]; then
 fi
 
 file="${files[0]}"
+
+if [[ -d "$file" ]]; then
+    doublecmd "$file" >/dev/null 2>&1 &
+    disown
+    exit 0
+fi
+
 ext="${file##*.}"
 ext=".${ext}"
 
