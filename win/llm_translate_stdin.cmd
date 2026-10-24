@@ -1,1 +1,0 @@
-pwsh -c "Get-Clipboard" | bash llm_translate.sh --stdin

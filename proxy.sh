@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
-# Minimal local http/https proxy switcher.
+# Minimal local http/https proxy switcher (Linux + Windows git bash).
+# Use with `source` so the env vars stick in the current shell:
+#   source proxy.sh on [port]
+#   source proxy.sh off
 
 set -e
 set -u
