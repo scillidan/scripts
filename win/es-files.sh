@@ -46,10 +46,11 @@ ensure_everything() {
 	if es.exe -timeout 500 -get-everything-version >/dev/null 2>&1; then
 		return 0
 	fi
-	local ev="everything.exe"
-	command -v "$ev" >/dev/null 2>&1 || ev="E:/Scoop/apps/everything/current/Everything.exe"
+	# shortcut: assume scoop install, no PATH probing (keeps startup fast)
+	local ev="${SCOOP:-$HOME/scoop}"
+	ev="${ev//\\//}/apps/everything/current/Everything.exe"
 	if [[ ! -f "$ev" ]]; then
-		echo "Error: everything.exe not found in PATH or $ev" >&2
+		echo "Error: everything.exe not found: $ev (set SCOOP if your scoop root differs)" >&2
 		return 1
 	fi
 	"$ev" -minimized >/dev/null 2>&1 &

@@ -2,7 +2,9 @@
 # hardcoded 'Start Menu\Programs\Scoop Apps' shortcut folder.
 # Re-run after `scoop update` reverts it, or just use the scoop.cmd wrapper in
 # this folder, which calls this script automatically on every scoop invocation.
-$file = 'E:\Scoop\apps\scoop\current\lib\shortcuts.ps1'
+$ScoopRoot = $env:SCOOP
+if (-not $ScoopRoot) { $ScoopRoot = Join-Path $env:USERPROFILE 'Scoop' }
+$file = Join-Path $ScoopRoot 'apps\scoop\current\lib\shortcuts.ps1'
 if (-not (Test-Path -LiteralPath $file)) { Write-Warning "not found: $file"; exit 1 }
 
 $lines = [IO.File]::ReadAllLines($file)

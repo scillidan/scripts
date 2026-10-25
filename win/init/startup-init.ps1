@@ -1,9 +1,6 @@
 $startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
 $lnkPath = @(
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Ollama.lnk",
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Caffeine.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\DeskPins.lnk",
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\dnGREP.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\EarTrumpet.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Espanso.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Keyboard Locker.lnk",
@@ -11,19 +8,24 @@ $lnkPath = @(
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\RBTray.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\resizer2.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Sizer.lnk",
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\virgo.lnk",
+    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Virtual Desktop Manager.lnk",
     "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Zeal.lnk"
-    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\AltBacktick.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\CenterTaskbar.lnk"
-    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Ditto.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\CopyQ.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Everything.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\GoldenDict Auto Search.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\GoldenDict Search In Group.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\GoldenDict.lnk"
-    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Magpie.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Handy.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Keyboard Auto Switch Back.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Keyboard Switch.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\QuickSwitch.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\RectangleWin.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Reduce Memory.lnk"
-    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\T-Clock.lnk"
-    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Tailscale.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\ScreenOCR.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Vicinae.lnk"
     # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Win10_BrightnessSlider.lnk"
+    # "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Window Switcher.lnk"
 )
 
 $binPath = @(

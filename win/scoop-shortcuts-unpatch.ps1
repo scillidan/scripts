@@ -1,6 +1,8 @@
 # Revert scoop-shortcuts-patch.ps1: restore shortcuts.ps1 to pristine state.
 # Locates the `if ($env:SCOOP_MENU_DIR) { ... }` block (plus its comment line) and removes it.
-$file = 'E:\Scoop\apps\scoop\current\lib\shortcuts.ps1'
+$ScoopRoot = $env:SCOOP
+if (-not $ScoopRoot) { $ScoopRoot = Join-Path $env:USERPROFILE 'Scoop' }
+$file = Join-Path $ScoopRoot 'apps\scoop\current\lib\shortcuts.ps1'
 if (-not (Test-Path -LiteralPath $file)) { Write-Warning "not found: $file"; exit 1 }
 
 $lines = [IO.File]::ReadAllLines($file)
