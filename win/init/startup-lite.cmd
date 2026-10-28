@@ -6,4 +6,4 @@ start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Keyboard Switch.lnk"
 timeout /t 1 /nobreak >nul
 start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Keypirinha.lnk"
 timeout /t 1 /nobreak >nul
-start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\virgo.lnk"
+start "" "%USERHOME%\Local\Data\StartMenu\Scoop Apps\Virtual Desktop Manager.lnk"
