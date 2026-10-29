@@ -3,7 +3,7 @@ REM https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
 
 set tmpfile=%TEMP%\yazi-cwd.%random%
 
-yazi %* --cwd-file="%tmpfile%"
+call "%~dp0patch\yazi-theme.cmd" %* --cwd-file="%tmpfile%"
 
 :: If the file does not exist, then exit
 if not exist "%tmpfile%" exit /b 0
