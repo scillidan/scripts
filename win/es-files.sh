@@ -68,9 +68,9 @@ ensure_everything() {
 expand_path() {
 	local path="$1"
 	path="${path/#~/${HOME}}"
-	path=$(eval echo "$path")
+	# No eval: cmd/clink-substituted Windows paths would lose backslashes.
 	path="${path//\\//}"
-	echo "$path"
+	printf '%s\n' "$path"
 }
 
 get_target_dir() {

@@ -12,18 +12,19 @@ FZF_DEFAULT_COMMAND="rg --files"
 BIND_NAVIGATE="--bind 'alt-p:preview-page-up,alt-n:preview-page-down'"
 BIND_SELECT="--bind 'tab:select+down,btab:deselect+down,ctrl-a:select-all,ctrl-d:deselect-all'"
 BIND_ENTER="--bind 'enter:execute(bash \"${SCRIPT_DIR}/fzf_open.sh\" {+})+abort'"
-BIND_TOGGLE_PREVIEW="--bind 'ctrl-\\:change-preview-window(up,60%,border-bottom,+{2}+3/3,~2|right,60%,wrap,~2)'"
+# Non-default spec first: fzf starts the cycle at index 0 (see fzf-ripgrep.sh).
+BIND_TOGGLE_PREVIEW="--bind 'ctrl-\\:change-preview-window(right,75%,wrap,~2|right,50%,wrap,~2)'"
 PREVIEW="--preview 'bash ${SCRIPT_DIR}/fzf_preview.sh {}'"
-PREVIEW_WINDOW="--preview-window 'right,60%,wrap,~2'"
+PREVIEW_WINDOW="--preview-window 'right,50%,wrap,~2'"
 
 FZF_CMD="fzf $FLAG $BIND_NAVIGATE $BIND_SELECT $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_DCMD $BIND_TOGGLE_PREVIEW $PREVIEW $PREVIEW_WINDOW"
 
 expand_path() {
 	local path="$1"
 	path="${path/#~/${HOME}}"
-	path=$(eval echo "$path")
+	# No eval: cmd/clink-substituted Windows paths would lose backslashes.
 	path="${path//\\//}"
-	echo "$path"
+	printf '%s\n' "$path"
 }
 
 get_target_dir() {

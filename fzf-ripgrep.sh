@@ -2,6 +2,7 @@
 # Interactive grep launcher: fzf + ripgrep (+ bat preview).
 # Port of win/fzf-ripgrep.cmd; runs on Linux and on Windows via git bash.
 # Dependences: rg, fzf, bat.  Optional: subl, nvim.
+# Usage: fzf-ripgrep.sh [<directory>] [<initial query>]
 # Extra rg filters via env, e.g.  FZF_RG_EXTRA="-g *.py -g !**/dist/**" fzf-ripgrep.sh
 
 set -euo pipefail
@@ -22,7 +23,7 @@ tq() {
 	if [[ ${#q} -ge 2 && "${q:0:1}" == "'" && "${q: -1}" == "'" ]]; then
 		q="${q:1:${#q}-2}"
 	fi
-	printf '%s\n' "$q" > "$TQDIR/$old.tmp"
+	printf '%s\n' "$q" >"$TQDIR/$old.tmp"
 	if [[ -f "$TQDIR/$new.tmp" ]]; then
 		head -n1 "$TQDIR/$new.tmp"
 	fi
@@ -31,6 +32,16 @@ tq() {
 if [[ "${1:-}" == "--tq" ]]; then
 	tq "${2:-f}" "${3:-}"
 	exit 0
+fi
+
+# Optional search root (Windows paths from clink macros may use backslashes).
+# cd stays inside this script process; the caller's directory is untouched.
+if [[ -n "${1:-}" ]]; then
+	dir="${1//\\//}"
+	if [[ -d "$dir" ]]; then
+		cd "$dir"
+		shift
+	fi
 fi
 
 # -- rg flags (2>&1 surfaces option errors inside fzf).
@@ -43,7 +54,7 @@ RELOAD="echo {q} | grep -q .. && $RG {q} || true"
 # -- fzf on top, preview at the bottom, filling the whole terminal.
 FLAG="--ansi --disabled --delimiter : --height 100% --layout=reverse --border none --preview-border none --no-scrollbar --no-separator --inline-info"
 PREVIEW="--preview 'bat --force-colorization --style=numbers --highlight-line {2} {1}'"
-PREVIEW_WINDOW="--preview-window 'down,60%,border-top,+{2}+3/3,~2'"
+PREVIEW_WINDOW="--preview-window 'down,66%,border-top,+{2}+3/3,~2'"
 
 # -- Mode switching (CTRL-F = fzf filter, CTRL-R = ripgrep); --tq remembers
 #    each mode's query.  fzf mode starts with an empty query.
@@ -52,7 +63,9 @@ BIND_MODE="$BIND_MODE --bind 'ctrl-f:unbind(change,ctrl-f)+change-prompt(fzf> )+
 BIND_MODE="$BIND_MODE --bind 'ctrl-r:unbind(ctrl-r)+change-prompt(rg> )+disable-search+rebind(change,ctrl-f)+transform-query(bash $SCRIPT_DIR/fzf-ripgrep.sh --tq r {q})+reload($RELOAD)'"
 BIND_ENTER="--bind 'enter:execute(subl -a {1}:{2})' --bind 'alt-enter:execute(subl -a {1}:{2})+abort'"
 BIND_NAV="--bind 'ctrl-o:execute(nvim +{2} {1})+abort,ctrl-k:preview-up,ctrl-j:preview-down,ctrl-h:preview-page-up,ctrl-l:preview-page-down'"
-BIND_TOGGLE="--bind 'ctrl-\\:change-preview-window(right,60%,wrap,+{2}+3/3,~2|down,60%,border-top,+{2}+3/3,~2)'"
+# -- Non-default spec first: fzf starts the cycle at index 0, so putting the
+#    default (66%) first would make the first press a no-op.
+BIND_TOGGLE="--bind 'ctrl-\\:change-preview-window(down,80%,border-top,+{2}+3/3,~2|down,66%,border-top,+{2}+3/3,~2)'"
 
 FZF_CMD="fzf $FLAG --prompt 'rg> ' --query '$*' $PREVIEW $PREVIEW_WINDOW $BIND_MODE $BIND_ENTER $BIND_NVIM $BIND_SUBL $BIND_NAV $BIND_TOGGLE"
 
