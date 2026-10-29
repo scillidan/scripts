@@ -1,4 +1,4 @@
-#!/bin/bash
+@echo off
 REM https://github.com/narnaud/clink-terminal/blob/main/bin/y.cmd
 
 set tmpfile=%TEMP%\yazi-cwd.%random%
