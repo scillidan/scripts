@@ -1,6 +1,6 @@
 # Usage: scoop-home-browser.ps1 <app>
 # Opens the app homepage in %BROWSER% instead of the system default browser.
-# Called from scoop.cmd: scoop's own `home` ends in Start-Process <url>, which
+# Usage: scoop-home.cmd <app> calls this with the app name.
 # goes through the shell and always picks the default browser (Edge here).
 # shortcut: %BROWSER% must be a single executable path, not "exe --args".
 param($app)

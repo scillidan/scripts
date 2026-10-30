@@ -1,4 +1,4 @@
-# Called by scoop.cmd (this folder) for `scoop update ...`.
+# Called by scoop-update.cmd for `scoop update ...`.
 # When scoop refuses to update because the app is still running, list the
 # offending processes and, on confirmation, close them and retry.
 # If closing would kill the shell that launched us (e.g. `scoop update pwsh`

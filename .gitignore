@@ -1,2 +1,3 @@
-__pycache__
+__pycache__/
+cortexkit/
 lib/.llm_abbreviate/cache.txt

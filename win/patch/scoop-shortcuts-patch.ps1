@@ -1,7 +1,7 @@
 # Idempotently patch scoop's shortcuts.ps1 so $env:SCOOP_MENU_DIR overrides the
 # hardcoded 'Start Menu\Programs\Scoop Apps' shortcut folder.
-# Re-run after `scoop update` reverts it, or just use the scoop.cmd wrapper in
-# this folder, which calls this script automatically on every scoop invocation.
+# Re-run after `scoop update` reverts it, or just run scoop-shortcut.cmd
+# in this folder.
 $ScoopRoot = $env:SCOOP
 if (-not $ScoopRoot) { $ScoopRoot = Join-Path $env:USERPROFILE 'Scoop' }
 $file = Join-Path $ScoopRoot 'apps\scoop\current\lib\shortcuts.ps1'
