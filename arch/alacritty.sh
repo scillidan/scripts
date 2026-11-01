@@ -3,9 +3,8 @@ set -euo pipefail
 
 CONFIG="$USERHOME/Share/dotfiles/.config/alacritty/alacritty.toml"
 
-exec alacritty \
+exec alacritty-theme \
 	--config-file "$CONFIG" \
-	--option "general.import=['terminal-theme-switch alacritty']" \
 	--working-directory "$USERHOME/Downloads" \
 	"$@" \
 	--command "${SHELL:-/bin/bash}" -l
