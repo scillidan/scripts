@@ -161,6 +161,49 @@ if ! command -v whisper-cli >/dev/null 2>&1; then
 	exit 1
 fi
 
+# GPU needs both a working NVIDIA driver and a CUDA-enabled whisper-cli build.
+GPU_AVAILABLE=0
+whisper_bin=$(command -v whisper-cli)
+if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
+	whisper_dir=$(dirname "$whisper_bin")
+	if [ -f "$whisper_dir/ggml-cuda.dll" ] || [ -f "$whisper_dir/libggml-cuda.so" ] || grep -aq "ggml_cuda_init" "$whisper_bin"; then
+		GPU_AVAILABLE=1
+	fi
+fi
+
+select_engine() {
+	echo ""
+	echo "Engine"
+	echo "----------------------------------------"
+	if [ "$GPU_AVAILABLE" = 1 ]; then
+		echo "1) GPU (default)"
+		echo "2) CPU"
+		printf "Enter choice (1/2, default: 1): "
+		read engine_choice
+		if [ "$engine_choice" = "2" ]; then
+			ENGINE=CPU
+		else
+			ENGINE=GPU
+		fi
+	else
+		echo "1) GPU (unavailable: no NVIDIA GPU or CPU-only whisper-cli)"
+		echo "2) CPU (default)"
+		printf "Enter choice (1/2, default: 2): "
+		read engine_choice
+		if [ "$engine_choice" = "1" ]; then
+			echo "GPU not available, using CPU"
+		fi
+		ENGINE=CPU
+	fi
+
+	if [ "$ENGINE" = CPU ]; then
+		ENGINE_OPT="--no-gpu"
+	else
+		ENGINE_OPT=""
+	fi
+}
+select_engine
+
 select_language "Transcription Language"
 LANG="$SELECTED"
 
@@ -198,7 +241,8 @@ if [ ! -f "$MODEL" ]; then
 	exit 1
 fi
 
-printf "\nTranscribing with language: %s\n" "$LANG"
+printf "\nEngine: %s\n" "$ENGINE"
+printf "Transcribing with language: %s\n" "$LANG"
 printf "Model: %s\n" "$(basename "$MODEL")"
 
 error=0
@@ -242,6 +286,7 @@ for file in "$@"; do
 	if ! whisper-cli \
 		-m "$MODEL" \
 		-t 16 \
+		$ENGINE_OPT \
 		-of "$outbase" \
 		-osrt \
 		-ml 30 \
