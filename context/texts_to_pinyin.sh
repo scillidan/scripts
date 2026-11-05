@@ -1,24 +1,26 @@
 #!/bin/sh
-# Convert LRC files to Mandarin Pinyin or Cantonese Jyutping
+# Convert LRC/TXT/SRT/MD text to Mandarin Pinyin or Cantonese Jyutping
 #
 # Usage:
 #   Windows:
 #     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select files > Right-click > Send To > lrcs_to_pinyin
+#     Select files > Right-click > Send To > texts_to_pinyin
 #
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
 #
 #   Command line:
-#     ./script.sh [pinyin|jyutping|both] <lrc1> <lrc2> ...
+#     ./script.sh [pinyin|jyutping|both] <file1> <file2> ...
+#
+# Output: <name>.<mode>.<ext> next to the input file.
 
 # Restart without startup files if ble.sh has intercepted arguments.
-if [ -n "${BASH_VERSION:-}" ] && [ -n "${BLE_VERSION:-}" ] && [ -z "${LRC_PINYIN_NO_RC:-}" ]; then
-	LRC_PINYIN_NO_RC=1 exec bash --norc --noprofile "$0" "$@"
+if [ -n "${BASH_VERSION:-}" ] && [ -n "${BLE_VERSION:-}" ] && [ -z "${TEXT_PINYIN_NO_RC:-}" ]; then
+	TEXT_PINYIN_NO_RC=1 exec bash --norc --noprofile "$0" "$@"
 fi
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-PY_SCRIPT="$SCRIPT_DIR/lib/lrcs_to_pinyin.py"
+PY_SCRIPT="$SCRIPT_DIR/lib/texts_to_pinyin.py"
 
 if ! command -v uv >/dev/null 2>&1; then
 	echo "Error: uv not found (https://docs.astral.sh/uv/)"
@@ -61,7 +63,7 @@ else
 fi
 
 if [ $# -eq 0 ]; then
-	echo "Usage: script.sh [pinyin|jyutping|both] <lrc1> <lrc2> ..."
+	echo "Usage: script.sh [pinyin|jyutping|both] <file1> <file2> ..."
 	echo "Press Enter to exit..."
 	read
 	exit 1
@@ -72,7 +74,10 @@ error=0
 convert_file() {
 	file="$1"
 	cvt_mode="$2"
-	output="${file%.lrc}.${cvt_mode}.lrc"
+	case "$file" in
+	*.*) output="${file%.*}.${cvt_mode}.${file##*.}" ;;
+	*) output="${file}.${cvt_mode}.txt" ;;
+	esac
 	if ! uv run "$PY_SCRIPT" "$cvt_mode" "$file" "$output"; then
 		echo "Error: Failed to convert $file to $cvt_mode"
 		error=1
@@ -80,10 +85,11 @@ convert_file() {
 }
 
 for file in "$@"; do
-	case "$file" in
-	*.lrc | *.LRC) ;;
+	ext=$(printf '%s' "${file##*.}" | tr '[:upper:]' '[:lower:]')
+	case "$ext" in
+	lrc | txt | srt | md | markdown) ;;
 	*)
-		echo "Skipping non-LRC file: $file"
+		echo "Skipping unsupported file: $file"
 		continue
 		;;
 	esac

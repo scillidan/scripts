@@ -15,10 +15,19 @@
 error=0
 
 for file in "$@"; do
+    case "$file" in
+    *.*) ;;
+    *)
+        echo "Skip (no extension): $file"
+        error=1
+        continue
+        ;;
+    esac
     dir=$(dirname "$file")
-    name=$(basename "$file" .mp3)
-    temp="$dir/${name}_tmp.mp3"
-    backup="$dir/${name}.bak"
+    ext="${file##*.}"
+    name=$(basename "$file" ".$ext")
+    temp="$dir/${name}_tmp.$ext"
+    backup="$dir/${name}.${ext}.bak"
 
     echo "Processing: $file"
 

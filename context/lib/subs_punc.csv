@@ -1,0 +1,4 @@
+Category,Find,ReplaceWith,Description,Active,Type
+Punc,"[\p{P}\p{Zs}$+=|~^`]+", ,punctuation to space,true,RegularExpression
+Punc,"\s{2,}", ,collapse spaces,true,RegularExpression
+Punc,"^ +| +$",,"trim",true,RegularExpression

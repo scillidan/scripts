@@ -15,6 +15,13 @@
 error=0
 
 for file in "$@"; do
+    ext=$(printf '%s' "${file##*.}" | tr '[:upper:]' '[:lower:]')
+    case "$ext" in
+    jpg | jpeg)
+        echo "Skip (already JPEG): $file"
+        continue
+        ;;
+    esac
     output="${file%.*}.jpg"
     if ! magick convert "$file" -quality 90 "$output"; then
         echo "Error: Failed to convert $file"
