@@ -4,36 +4,42 @@
 #   translate-pane.sh
 #
 # Bound to Alt-t. Zellij's `Run` starts this in a throwaway pane; we replace that
-# pane with the translation, so the screen ends up with two panes only.
+# pane with the translation, so only the source and the translation remain.
 #
-# Why the pane id is resolved here: once a new pane opens it takes focus, and
-# `dump-screen` without `--pane-id` would dump that new pane instead of the one
-# the key was pressed in.
-#
-# No `--direction`: Zellij rejects it together with `--in-place`, and the
-# replacement pane lands where the runner already was.
+# Diagnostics go to zellij-translate-init.log in TMPDIR because the runner pane
+# is replaced and any output printed here would be lost.
 
-set -euo pipefail
+set -uo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+log="${TMPDIR:-/tmp}/zellij-translate-init.log"
 
-# zellij action list-panes prints the focused pane's id in its JSON; grab the
-# whole table so the exact field can be inspected when it changes.
-table="$(zellij action list-panes -j -s 2>&1 || true)"
-
-focused="$(printf '%s' "${table}" | grep -o '"is_focused"[[:space:]]*:[[:space:]]*true[^}]*' | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 | head -1)"
-
-# Fallbacks for a table without is_focused: first pane id, or the last one.
-if [ -z "${focused}" ]; then
-	focused="$(printf '%s' "${table}" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 | head -1)"
-fi
-
-if [ -z "${focused}" ]; then
-	echo "translate-pane: could not read the pane list" >&2
-	echo "${table}" | head -20 >&2
+hold() {
+	echo "translate-pane: $*" >&2
+	echo "translate-pane: see ${log}" >&2
 	read -r -p "--- enter to close ---" _ || true
 	exit 1
+}
+
+table="$(zellij action list-panes -j -s 2>&1)"
+rc=$?
+
+{
+	echo "rc=${rc}"
+	echo "ZELLIJ=${ZELLIJ:-<unset>}"
+	printf '%s\n' "${table}"
+} >"${log}"
+
+focused="$(printf '%s' "${table}" | grep -o '"is_focused"[[:space:]]*:[[:space:]]*true[^}]*' |
+	grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 | head -1)"
+
+if [ -z "${focused}" ]; then
+	# Fall back to the first pane id if the table has no focus marker.
+	focused="$(printf '%s' "${table}" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' |
+		cut -d'"' -f4 | head -1)"
 fi
+
+[ -n "${focused}" ] || hold "no pane id in list-panes (rc=${rc})"
 
 exec zellij action new-pane --in-place --close-replaced-pane \
 	-- bash "${here}/translate-now.sh" "${focused}"
