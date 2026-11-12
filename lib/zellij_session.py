@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Attach to a Zellij session, creating it from a layout if it does not exist.
+"""Attach to a Zellij session, creating it when it does not exist.
 
 Usage:
-    zellij-session                 # session "session", layout "user" (tmuxp replacement)
-    zellij-session <name>          # named session, layout "project"
-    zellij-session <dir>           # session named after the directory, cwd = <dir>
-    zellij-session <name> <layout> # explicit layout
+    zellij-session                 # session "session"
+    zellij-session <name>          # named session
+    zellij-session <dir>           # session named after the directory
+
+Every session uses the default layout; only "session" is special, and only in
+that it has no directory to name it after.
 """
 
 import os
@@ -31,7 +33,8 @@ def session_names():
 
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "session"
-    layout = sys.argv[2] if len(sys.argv) > 2 else None
+    if len(sys.argv) > 2:
+        sys.exit("zellij-session: expected at most one argument")
 
     path = os.path.expanduser(target)
     if os.path.isdir(path):
@@ -41,13 +44,20 @@ def main():
         name = target
 
     name = re.sub(r"[^A-Za-z0-9_-]+", "-", name).strip("-") or "session"
-    if layout is None:
-        layout = "user" if name == "session" else "project"
 
     if name in session_names():
         args = [ZELLIJ, "attach", name]
+    elif os.name == "nt":
+        # Scripted shells (no console) cannot create a Zellij session on Windows:
+        # every creation route needs a live client or dies with its console.
+        if not os.isatty(1):
+            sys.exit(
+                "zellij-session: run this from an interactive terminal "
+                "(a script cannot create the session)"
+            )
+        args = [ZELLIJ, "attach", name, "--create"]
     else:
-        args = [ZELLIJ, "--session", name, "--layout", layout]
+        args = [ZELLIJ, "--session", name]
 
     if os.name == "nt":
         sys.exit(subprocess.call(args))
