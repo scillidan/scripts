@@ -1,45 +1,20 @@
 #!/bin/bash
-# Open a translation of the pane you are looking at beside it.
+# Open a new Zellij tab that translates the pane you are looking at.
 #
 #   translate-pane.sh
 #
-# Bound to Alt-t. Zellij's `Run` starts this in a throwaway pane; we replace that
-# pane with the translation, so only the source and the translation remain.
+# Bound to Alt-t. The pane id is hard-wired to terminal_1: inside the freshly
+# created tab, the source is pane 1 and Zellij's 1-row tab bar pane (bars
+# plugin) is pane 2, so `dump-screen --pane-id terminal_1` reads the source from
+# whichever pane runs this.
 #
-# Diagnostics go to zellij-translate-init.log in TMPDIR because the runner pane
-# is replaced and any output printed here would be lost.
+# Layout: the new tab has one full-height shell; the translation is spawned below
+# it, so the source stays on top and the translation fills the bottom half.
 
 set -uo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-log="${TMPDIR:-/tmp}/zellij-translate-init.log"
+layout="${USERHOME:-$HOME}/Share/dotfiles/.config/zellij/config/layouts/translate.kdl"
 
-hold() {
-	echo "translate-pane: $*" >&2
-	echo "translate-pane: see ${log}" >&2
-	read -r -p "--- enter to close ---" _ || true
-	exit 1
-}
-
-table="$(zellij action list-panes -j -s 2>&1)"
-rc=$?
-
-{
-	echo "rc=${rc}"
-	echo "ZELLIJ=${ZELLIJ:-<unset>}"
-	printf '%s\n' "${table}"
-} >"${log}"
-
-focused="$(printf '%s' "${table}" | grep -o '"is_focused"[[:space:]]*:[[:space:]]*true[^}]*' |
-	grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 | head -1)"
-
-if [ -z "${focused}" ]; then
-	# Fall back to the first pane id if the table has no focus marker.
-	focused="$(printf '%s' "${table}" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' |
-		cut -d'"' -f4 | head -1)"
-fi
-
-[ -n "${focused}" ] || hold "no pane id in list-panes (rc=${rc})"
-
-exec zellij action new-pane --in-place --close-replaced-pane \
-	-- bash "${here}/translate-now.sh" "${focused}"
+zellij action new-tab --layout "${layout}"
+zellij action new-pane --direction down -- bash "${here}/translate-now.sh" terminal_1
