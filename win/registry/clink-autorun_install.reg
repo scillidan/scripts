@@ -1,0 +1,10 @@
+Windows Registry Editor Version 5.00
+
+; cmd.exe AutoRun -> Clink injection inside Zellij panes.
+; Zellij starts panes as a bare cmd.exe (no /k init.cmd), so Clink has to come
+; from AutoRun. The guard script keeps conda's hook and only injects Clink when
+; ZELLIJ is set, so plain cmd.exe outside Zellij is untouched.
+; Remove with clink-autorun_uninstall.reg.
+
+[HKEY_CURRENT_USER\Software\Microsoft\Command Processor]
+"AutoRun"="C:\\Users\\User\\Share\\dotfiles.win\\Scoop\\clink\\zellij-autorun.cmd"

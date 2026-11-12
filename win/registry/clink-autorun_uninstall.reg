@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+; Removes the cmd.exe AutoRun value installed by clink-autorun_install.reg.
+; Clink is then only injected by `cmd /k init.cmd` (WezTerm tabs), so Zellij
+; panes lose Clink.
+
+[HKEY_CURRENT_USER\Software\Microsoft\Command Processor]
+"AutoRun"=-
