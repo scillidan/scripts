@@ -158,13 +158,13 @@ handle_nested() {
 	depth="$3"
 	new_depth=$((depth + 1))
 
-	ext_pattern=""
+	set --
 	for ext in $NESTED_EXTS; do
-		[ -n "$ext_pattern" ] && ext_pattern="$ext_pattern -o"
-		ext_pattern="$ext_pattern -name '*.$ext'"
+		[ $# -gt 0 ] && set -- "$@" -o
+		set -- "$@" -name "*.$ext"
 	done
 
-	find "$target_dir" -maxdepth 1 -type f \( $ext_pattern \) 2>/dev/null | while IFS= read -r nested; do
+	find "$target_dir" -maxdepth 1 -type f \( "$@" \) 2>/dev/null | while IFS= read -r nested; do
 		printf "  Nested: %s -> " "$(basename "$nested")"
 		if extract_archive "$nested" "$codepage" "$new_depth"; then
 			rm -f "$nested"
