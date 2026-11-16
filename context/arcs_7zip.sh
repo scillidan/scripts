@@ -24,8 +24,8 @@ if ! command -v 7z >/dev/null 2>&1; then
 	exit 1
 fi
 
-readonly NESTED_EXTS="7z zip rar 001 tar gz bz2 xz lzma Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi"
-readonly ARCHIVE_EXTS="7z zip rar 001 tar gz tgz bz2 bz2 xz txz lzma lz Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi arj zst"
+readonly NESTED_EXTS="7z zip rar cb7 cbr cbt cbz 001 tar gz bz2 xz lzma Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi"
+readonly ARCHIVE_EXTS="7z zip rar cb7 cbr cbt cbz 001 tar gz tgz bz2 bz2 xz txz lzma lz Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi arj zst"
 readonly RECURSION_MAX=5
 readonly DEFAULT_ARCHIVE_EXT="zip"
 readonly DELETE_SOURCE_AFTER=false
