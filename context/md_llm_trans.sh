@@ -1,5 +1,5 @@
 #!/bin/sh
-# Translate Markdown/TXT files using local LLM (preserving formatting)
+# Translate Markdown/TXT files using llama.cpp or DeepSeek (preserving formatting)
 #
 # Markdown placeholder/tokenization strategy adapted from:
 #   https://github.com/rockbenben/md-translator
@@ -10,7 +10,7 @@
 #
 # Requires:
 #   uv (https://docs.astral.sh/uv/)
-#   llama.cpp server running (default: http://127.0.0.1:8010)
+#   llama.cpp server running, or DEEPSEEK_API_KEY for the DeepSeek backend
 #
 # Usage:
 #   Windows:
@@ -25,22 +25,29 @@
 #
 #   Non-interactive (skip menu):
 #     ./script.sh --model=gemma-3-12b-it --source=en --target=zh <file1.md>
+#     ./script.sh --backend=deepseek --source=en --target=zh <file1.md>
 #     LLM_TRANS_MODEL=gemma-3-12b-it LLM_TRANS_SRC=en LLM_TRANS_TGT=zh ./script.sh <file1.md>
 #
 # ── Built-in ENV defaults ─────────────────────────────────────────────────────
 # Set externally to skip the interactive menu. Precedence: --args > ENV > menu.
+#   LLM_BACKEND=llamacpp|deepseek
 #   LLM_TRANS_MODEL=gemma-3-12b-it
 #   LLM_TRANS_SRC=en
 #   LLM_TRANS_TGT=zh
 
 # ── Parse --args ─────────────────────────────────────────────────────────────
 
+arg_backend=""
 arg_model=""
 arg_source=""
 arg_target=""
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+	--backend=*)
+		arg_backend="${1#--backend=}"
+		shift
+		;;
 	--model=*)
 		arg_model="${1#--model=}"
 		shift
@@ -78,12 +85,15 @@ fi
 # ── Model selection ──────────────────────────────────────────────────────────
 
 # Available models (display-name:model-tag)
-MODELS="Gemma-3-12b:gemma-3-12b-it TranslateGemma-12b:translategemma-12b-it-i1"
+MODELS="Gemma-3-12b:gemma-3-12b-it TranslateGemma-12b:translategemma-12b-it-i1 DeepSeek-Flash:deepseek-flash"
+BACKEND="${arg_backend:-${LLM_BACKEND:-}}"
 
 if [ -n "$arg_model" ]; then
 	MODEL="$arg_model"
 elif [ -n "$LLM_TRANS_MODEL" ]; then
 	MODEL="$LLM_TRANS_MODEL"
+elif [ "$BACKEND" = "deepseek" ]; then
+	MODEL="deepseek-flash"
 else
 	echo "Select model:"
 	mnum=0
@@ -108,6 +118,25 @@ else
 	else
 		MODEL="$mchoice"
 	fi
+fi
+
+if [ -z "$BACKEND" ]; then
+	case "$MODEL" in
+	deepseek-*) BACKEND="deepseek" ;;
+	*) BACKEND="llamacpp" ;;
+	esac
+fi
+if [ "$BACKEND" != "llamacpp" ] && [ "$BACKEND" != "deepseek" ]; then
+	echo "Error: Invalid backend: $BACKEND"
+	echo "Press Enter to exit..."
+	read
+	exit 1
+fi
+if [ "$BACKEND" = "deepseek" ] && [ -z "$DEEPSEEK_API_KEY" ]; then
+	echo "Error: DEEPSEEK_API_KEY is required for the DeepSeek backend"
+	echo "Press Enter to exit..."
+	read
+	exit 1
 fi
 
 # Languages: Name:code (alphabetical by name, 2-column layout)
@@ -201,18 +230,25 @@ else
 fi
 
 echo ""
-echo "Model:  $MODEL"
-echo "Source: $SRC_LANG"
-echo "Target: $TGT_LANG"
+echo "Backend: $BACKEND"
+echo "Model:   $MODEL"
+echo "Source:  $SRC_LANG"
+echo "Target:  $TGT_LANG"
 echo ""
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
+if [ "$BACKEND" = "deepseek" ]; then
+	HOST="${DEEPSEEK_BASE_URL:-https://api.deepseek.com}"
+else
+	HOST="http://127.0.0.1:8010"
+fi
 
 error=0
 
 for file in "$@"; do
 	if ! uv run "$script_dir/lib/md_llm_trans.py" \
-		--host "http://127.0.0.1:8010" \
+		--backend "$BACKEND" \
+		--host "$HOST" \
 		--model "$MODEL" \
 		--src-lang "$SRC_LANG" \
 		--tgt-lang "$TGT_LANG" \

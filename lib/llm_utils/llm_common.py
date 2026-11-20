@@ -1,6 +1,7 @@
 import json
 import sys
 import io
+import os
 import unicodedata
 from typing import Optional
 
@@ -133,6 +134,60 @@ def call_llamacpp(
     if not choices:
         return ""
     return choices[0]["message"]["content"].strip()
+
+
+def call_deepseek(
+    prompt: str,
+    model: Optional[str],
+    host: Optional[str],
+    timeout: int,
+    *,
+    system_prompt: Optional[str] = None,
+    temperature: float = 0.3,
+    max_tokens: Optional[int] = 512,
+) -> str:
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY is not set")
+
+    base_url = (
+        host or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com"
+    ).rstrip("/")
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+    payload = {
+        "messages": messages,
+        "temperature": temperature,
+        "stream": False,
+        "thinking": {"type": "disabled"},
+    }
+    if model:
+        payload["model"] = model
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
+
+    resp = requests.post(
+        f"{base_url}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        data=safe_json_dumps(payload).encode("utf-8", errors="replace"),
+        timeout=timeout,
+    )
+    resp.raise_for_status()
+    choices = resp.json().get("choices", [])
+    if not choices:
+        raise RuntimeError("DeepSeek returned no choices")
+    choice = choices[0]
+    if choice.get("finish_reason") == "length":
+        raise RuntimeError("DeepSeek response was truncated by max_tokens")
+    content = choice.get("message", {}).get("content")
+    if not content or not content.strip():
+        raise RuntimeError("DeepSeek returned empty content")
+    return content.strip()
 
 
 def format_html(main_text: str, original: Optional[str] = None) -> str:

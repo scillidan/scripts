@@ -1,12 +1,12 @@
 #!/bin/sh
-# Translate SRT/VTT/TSV subtitles using subsetzer-llamacpp
+# Translate SRT/VTT/TSV subtitles using llama.cpp or DeepSeek via subsetzer-llamacpp
 #
 # Command source (forked and rewritten):
 #   https://github.com/scillidan/subsetzer-llamacpp
 #   (C:\Users\User\Share\forks\subsetzer-llamacpp)
 #
 # Notes:
-#   Requires subsetzer-llamacpp installed and llama.cpp server running
+#   Requires subsetzer-llamacpp and llama.cpp, or DEEPSEEK_API_KEY for DeepSeek
 #   Server: llama-server -m <model>.gguf --port 8010
 #
 # Usage:
@@ -22,22 +22,29 @@
 #
 #   Non-interactive (skip menu):
 #     ./script.sh --model=gemma-3-12b-it --source=en --target=zh <file.srt>
+#     ./script.sh --backend=deepseek --source=en --target=zh <file.srt>
 #     LLM_TRANS_MODEL=gemma-3-12b-it LLM_TRANS_SRC=en LLM_TRANS_TGT=zh ./script.sh <file.srt>
 #
 # ── Built-in ENV defaults ─────────────────────────────────────────────────────
 # Set externally to skip the interactive menu. Precedence: --args > ENV > menu.
+#   LLM_BACKEND=llamacpp|deepseek
 #   LLM_TRANS_MODEL=gemma-3-12b-it
 #   LLM_TRANS_SRC=en
 #   LLM_TRANS_TGT=zh
 
 # ── Parse --args ─────────────────────────────────────────────────────────────
 
+arg_backend=""
 arg_model=""
 arg_source=""
 arg_target=""
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+	--backend=*)
+		arg_backend="${1#--backend=}"
+		shift
+		;;
 	--model=*)
 		arg_model="${1#--model=}"
 		shift
@@ -220,12 +227,15 @@ select_language() {
 # ── Model selection ──────────────────────────────────────────────────────────
 
 # Available models (display-name:model-tag)
-MODELS="Gemma-3-12b:gemma-3-12b-it TranslateGemma-12b:translategemma-12b-it-i1"
+MODELS="Gemma-3-12b:gemma-3-12b-it TranslateGemma-12b:translategemma-12b-it-i1 DeepSeek-Flash:deepseek-flash"
+BACKEND="${arg_backend:-${LLM_BACKEND:-}}"
 
 if [ -n "$arg_model" ]; then
 	MODEL="$arg_model"
 elif [ -n "$LLM_TRANS_MODEL" ]; then
 	MODEL="$LLM_TRANS_MODEL"
+elif [ "$BACKEND" = "deepseek" ]; then
+	MODEL="deepseek-flash"
 else
 	echo "Select model:"
 	mnum=0
@@ -250,6 +260,25 @@ else
 	else
 		MODEL="$mchoice"
 	fi
+fi
+
+if [ -z "$BACKEND" ]; then
+	case "$MODEL" in
+	deepseek-*) BACKEND="deepseek" ;;
+	*) BACKEND="llamacpp" ;;
+	esac
+fi
+if [ "$BACKEND" != "llamacpp" ] && [ "$BACKEND" != "deepseek" ]; then
+	echo "Error: Invalid backend: $BACKEND"
+	echo "Press Enter to exit..."
+	read
+	exit 1
+fi
+if [ "$BACKEND" = "deepseek" ] && [ -z "$DEEPSEEK_API_KEY" ]; then
+	echo "Error: DEEPSEEK_API_KEY is required for the DeepSeek backend"
+	echo "Press Enter to exit..."
+	read
+	exit 1
 fi
 
 # ── Source language selection ────────────────────────────────────────────────
@@ -280,10 +309,21 @@ else
 fi
 
 echo ""
-echo "Model:  $MODEL"
-echo "Source: $SRC_LANG"
-echo "Target: $TGT_LANG"
+echo "Backend: $BACKEND"
+echo "Model:   $MODEL"
+echo "Source:  $SRC_LANG"
+echo "Target:  $TGT_LANG"
 echo ""
+
+if [ "$BACKEND" = "deepseek" ]; then
+	HOST="${DEEPSEEK_BASE_URL:-https://api.deepseek.com}"
+	LLM_MODE="deepseek"
+	STREAM_OPT="--no-stream"
+else
+	HOST="http://localhost:8010"
+	LLM_MODE="auto"
+	STREAM_OPT="--stream"
+fi
 
 error=0
 
@@ -295,8 +335,10 @@ for file in "$@"; do
 	printf "\n--- %s ---\n" "$file"
 
 	if ! subsetzer-llamacpp \
-		--host http://localhost:8010 \
+		--host "$HOST" \
 		--model "$MODEL" \
+		--llm-mode "$LLM_MODE" \
+		"$STREAM_OPT" \
 		--format srt \
 		--no-punc \
 		--source "$SRC_LANG" \

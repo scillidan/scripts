@@ -7,7 +7,7 @@
 # ]
 # ///
 
-# md_llm_trans — Translate Markdown/TXT files via local LLM, preserving formatting
+# md_llm_trans — Translate Markdown/TXT files via llama.cpp or DeepSeek
 #
 # Markdown placeholder/tokenization strategy adapted from:
 #   https://github.com/rockbenben/md-translator
@@ -54,7 +54,7 @@ import subprocess
 import requests
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "lib"))
-from llm_utils.llm_common import call_llamacpp, normalize_text
+from llm_utils.llm_common import call_deepseek, call_llamacpp, normalize_text
 
 from langdetect import detect, DetectorFactory
 from iso639 import Lang
@@ -405,7 +405,7 @@ _RE_PAREN_BEFORE_CJK = re.compile(r"([()])([{}])".format(_CJK_AND_CTX))
 
 _FULL_PUNCT = "\uff0c\u3002\uff1f\uff01\uff1b\uff1a\uff08\uff09\u201c\u201d"
 _RE_FULL_PUNCT_SPACE = re.compile(
-    r"([{}\u4e00-\u9fff\u3400-\u4dbf])\s+([{}\u4e00-\u9fff\u3400-\u4dbf])".format(
+    r"([{}\u4e00-\u9fff\u3400-\u4dbf])[ \t]+([{}\u4e00-\u9fff\u3400-\u4dbf])".format(
         _FULL_PUNCT, _FULL_PUNCT
     )
 )
@@ -444,8 +444,8 @@ def postprocess(text):
         if text == prev:
             break
 
-    text = re.sub(r"([\u4e00-\u9fff\u3400-\u4dbf])\s+([A-Za-z0-9`])", r"\1\2", text)
-    text = re.sub(r"([A-Za-z0-9`])\s+([\u4e00-\u9fff\u3400-\u4dbf])", r"\1\2", text)
+    text = re.sub(r"([\u4e00-\u9fff\u3400-\u4dbf])[ \t]+([A-Za-z0-9`])", r"\1\2", text)
+    text = re.sub(r"([A-Za-z0-9`])[ \t]+([\u4e00-\u9fff\u3400-\u4dbf])", r"\1\2", text)
 
     return text
 
@@ -456,6 +456,8 @@ def postprocess(text):
 
 DEFAULT_HOST = "http://127.0.0.1:8010"
 DEFAULT_MODEL = "gemma-3-12b-it"
+DEFAULT_DEEPSEEK_HOST = "https://api.deepseek.com"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-flash"
 DEFAULT_CONCURRENCY = 3
 DEFAULT_TIMEOUT = 120
 MAX_RETRIES = 3
@@ -545,26 +547,33 @@ def _call_translategemma(text, src_lang_code, tgt_lang_code, model, host, timeou
     raise RuntimeError(f"TranslateGemma error after {MAX_RETRIES} retries: {last_err}")
 
 
-def _call_gemma3(prompt, system_prompt, model, host, timeout, max_tokens=1024):
-    """Call Gemma-3 (or any standard chat model) with plain text prompt."""
+def _call_standard(
+    prompt, system_prompt, model, host, timeout, max_tokens=1024, backend="llamacpp"
+):
+    """Call a standard chat model with a plain text prompt."""
     last_err = None
     for attempt, delay_s in enumerate(RETRY_DELAYS, 1):
         try:
-            raw = call_llamacpp(
+            call = call_deepseek if backend == "deepseek" else call_llamacpp
+            raw = call(
                 prompt,
                 model,
                 host,
                 timeout,
                 system_prompt=system_prompt,
                 temperature=0.2,
-                max_tokens=max_tokens,
+                max_tokens=None if backend == "deepseek" else max_tokens,
             )
             return normalize_text(raw) if raw else ""
         except Exception as e:
             last_err = e
+            if backend == "deepseek" and isinstance(e, requests.exceptions.HTTPError):
+                status = e.response.status_code if e.response is not None else None
+                if status and 400 <= status < 500 and status != 429:
+                    raise
             if attempt < MAX_RETRIES:
                 time.sleep(delay_s)
-    raise RuntimeError(f"LLM error after {MAX_RETRIES} retries: {last_err}")
+    raise RuntimeError(f"{backend} error after {MAX_RETRIES} retries: {last_err}")
 
 
 def translate_segments(
@@ -577,8 +586,9 @@ def translate_segments(
     src_lang_code,
     tgt_lang_code,
     progress_cb=None,
+    backend="llamacpp",
 ):
-    """Translate each segment independently via local LLM."""
+    """Translate each segment independently via the selected LLM backend."""
     global _INTERRUPTED
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -586,6 +596,7 @@ def translate_segments(
     total = len(segments)
     results = [None] * total
     done = 0
+    fatal_error = None
 
     if use_tgemma:
         # TranslateGemma: no system prompt, structured content
@@ -603,6 +614,11 @@ def translate_segments(
             .replace("{src_lang}", src_label)
             .replace("{tgt_lang}", tgt_label)
         )
+        if backend == "deepseek":
+            system += (
+                "\n4. Preserve placeholders such as <<<CODE_100>>> exactly, "
+                "including their names, numbers, and brackets."
+            )
         user_tmpl = preset["user"]
 
         def _do_one(idx, text):
@@ -611,7 +627,17 @@ def translate_segments(
                 .replace("{tgt_lang}", tgt_label)
                 .replace("{text}", text)
             )
-            return idx, _call_gemma3(prompt, system, model, host, timeout)
+            result = _call_standard(
+                prompt, system, model, host, timeout, backend=backend
+            )
+            if backend == "deepseek":
+                expected = sorted(PH_RE.findall(text))
+                actual = sorted(PH_RE.findall(result))
+                if actual != expected:
+                    raise RuntimeError(
+                        "DeepSeek did not preserve Markdown placeholders"
+                    )
+            return idx, result
 
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
         futures = {pool.submit(_do_one, i, seg): i for i, seg in enumerate(segments)}
@@ -626,6 +652,13 @@ def translate_segments(
                     idx = futures[future]
                     results[idx] = segments[idx]
                     print(f"\n  Warning: segment {idx} failed: {e}", file=sys.stderr)
+                    if backend == "deepseek":
+                        fatal_error = RuntimeError(
+                            f"DeepSeek segment {idx} failed; no output written: {e}"
+                        )
+                        break
+                if fatal_error:
+                    break
                 done += 1
                 if progress_cb:
                     progress_cb(done, total)
@@ -633,6 +666,8 @@ def translate_segments(
             _INTERRUPTED = True
         for f in futures:
             f.cancel()
+    if fatal_error:
+        raise fatal_error
     for i in range(total):
         if results[i] is None:
             results[i] = segments[i]
@@ -654,6 +689,7 @@ def translate_file(
     src_lang_code,
     tgt_lang_code,
     do_postprocess=True,
+    backend="llamacpp",
 ):
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
@@ -697,6 +733,7 @@ def translate_file(
         src_lang_code,
         tgt_lang_code,
         progress,
+        backend=backend,
     )
     print(file=sys.stderr)
 
@@ -711,18 +748,24 @@ def main():
 
     signal.signal(signal.SIGINT, _signal_handler)
     parser = argparse.ArgumentParser(
-        description="Translate Markdown/TXT files using local LLM (preserving formatting)"
+        description="Translate Markdown/TXT files via llama.cpp or DeepSeek"
     )
     parser.add_argument("files", nargs="+", help="Files to translate (.md or .txt)")
     parser.add_argument(
+        "--backend",
+        choices=("llamacpp", "deepseek"),
+        default=os.environ.get("LLM_BACKEND", "llamacpp"),
+        help="LLM backend (default: llamacpp)",
+    )
+    parser.add_argument(
         "--host",
-        default=DEFAULT_HOST,
-        help=f"llama.cpp server host (default: {DEFAULT_HOST})",
+        default=None,
+        help=f"llama.cpp host or DeepSeek base URL (default: {DEFAULT_HOST})",
     )
     parser.add_argument(
         "--model",
-        default=os.environ.get("LLM_TRANS_MODEL", DEFAULT_MODEL),
-        help=f"Model name (default: {DEFAULT_MODEL})",
+        default=None,
+        help="Model name (default: backend-specific or LLM_TRANS_MODEL)",
     )
     parser.add_argument(
         "--src-lang",
@@ -774,6 +817,22 @@ def main():
     )
     args = parser.parse_args()
 
+    if args.model is None:
+        args.model = os.environ.get("LLM_TRANS_MODEL") or (
+            DEFAULT_DEEPSEEK_MODEL if args.backend == "deepseek" else DEFAULT_MODEL
+        )
+    if args.host is None:
+        args.host = (
+            os.environ.get("DEEPSEEK_BASE_URL", DEFAULT_DEEPSEEK_HOST)
+            if args.backend == "deepseek"
+            else DEFAULT_HOST
+        )
+    if args.backend == "deepseek":
+        if not os.environ.get("DEEPSEEK_API_KEY"):
+            parser.error("DEEPSEEK_API_KEY is required for the DeepSeek backend")
+        if is_translategemma(args.model):
+            parser.error("TranslateGemma is only available through llama.cpp")
+
     src_lang_code = parse_lang_input(args.src_lang)
     tgt_lang_code = parse_lang_input(args.tgt_lang)
 
@@ -785,10 +844,15 @@ def main():
 
     if args.debug:
         model_type = (
-            "TranslateGemma (/completion endpoint)"
-            if is_translategemma(args.model)
-            else "Standard chat (system + user prompt)"
+            "DeepSeek (non-thinking)"
+            if args.backend == "deepseek"
+            else (
+                "TranslateGemma (/completion endpoint)"
+                if is_translategemma(args.model)
+                else "Standard chat (system + user prompt)"
+            )
         )
+        print(f"Backend: {args.backend}", file=sys.stderr)
         print(f"Host: {args.host}", file=sys.stderr)
         print(f"Model: {args.model}", file=sys.stderr)
         print(f"Model type: {model_type}", file=sys.stderr)
@@ -823,6 +887,7 @@ def main():
                     src_lang_code,
                     tgt_lang_code,
                     do_postprocess=not args.no_postprocess,
+                    backend=args.backend,
                 )
                 with open(outpath, "w", encoding="utf-8") as f:
                     f.write(result)
@@ -834,7 +899,7 @@ def main():
         _INTERRUPTED = True
         error = 1
     finally:
-        if args.kill_server:
+        if args.kill_server and args.backend == "llamacpp":
             _kill_server(args.host)
     sys.exit(error)
 
