@@ -1,12 +1,12 @@
 #!/bin/sh
-# Translate SRT/VTT/TSV subtitles using llama.cpp or DeepSeek via subsetzer-llamacpp
+# Translate SRT/VTT/TSV subtitles using llama.cpp or DeepSeek via subsetzer-fork
 #
 # Command source (forked and rewritten):
-#   https://github.com/scillidan/subsetzer-llamacpp
-#   (C:\Users\User\Share\forks\subsetzer-llamacpp)
+#   https://github.com/scillidan/subsetzer-fork
+#   (C:\Users\User\Share\forks\subsetzer-fork)
 #
 # Notes:
-#   Requires subsetzer-llamacpp and llama.cpp, or DEEPSEEK_API_KEY for DeepSeek
+#   Requires subsetzer-fork and llama.cpp, or DEEPSEEK_API_KEY for DeepSeek
 #   Server: llama-server -m <model>.gguf --port 8010
 #
 # Usage:
@@ -72,15 +72,15 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
-if ! command -v subsetzer-llamacpp >/dev/null 2>&1; then
-	echo "Error: subsetzer-llamacpp not found"
+if ! command -v subsetzer >/dev/null 2>&1; then
+	echo "Error: subsetzer not found"
 	echo "Press Enter to exit..."
 	read
 	exit 1
 fi
 
 # ════════════════════════════════════════════════════════════════════════════
-# Language lists — subsetzer-llamacpp normalises languages via its langs.py
+# Language lists — subsetzer-fork normalises languages via its langs.py
 #
 # WARNING: The language lists below reference Gemma 3's cloud model card
 # (https://ai.google.dev/gemma/core/cards/gemma-3). The local GGUF checkpoint
@@ -334,7 +334,7 @@ for file in "$@"; do
 
 	printf "\n--- %s ---\n" "$file"
 
-	if ! subsetzer-llamacpp \
+	if ! subsetzer \
 		--host "$HOST" \
 		--model "$MODEL" \
 		--llm-mode "$LLM_MODE" \
