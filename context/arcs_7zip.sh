@@ -11,16 +11,56 @@
 #   Linux (Thunar):
 #     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
 #
+#   Double Commander (toolbar button / file association, non-interactive):
+#     Command : C:\Users\User\Scoop\apps\git\current\bin\bash.exe
+#     Params  : %"0 %t1 /c/Users/User/Share/scripts/context/arcs_7zip.sh --dc %p{"}{"}
+#     Start   : %D
+#
 #   Command line:
 #     ./script.sh <archive1> <archive2> ...      # extract
 #     ./script.sh -a <file_or_dir1> ...           # create archive(s)
 #     ./script.sh --xc=gbk <archive>              # extract with codepage
 #     ./script.sh -o <archive>                    # open in 7-Zip FM
+#     ./script.sh --dc <archive1> ...             # extract, non-interactive (for DC)
+#
+#   --dc notes (extract-only; do not combine with -a):
+#     - forces extract mode, disabling the "no archive input -> create" auto-detect,
+#     - never prompts for overwrite / "Press Enter", so stdin may be a non-TTY,
+#     - prepends Scoop shims to PATH when launched by a GUI process without it.
 
+# --- DC batch flags (pre-scanned so the 7z check below can see them) ---
+BATCH=0
+FORCE_EXTRACT=0
+for _a in "$@"; do
+	case "$_a" in
+	--dc)
+		BATCH=1
+		FORCE_EXTRACT=1
+		break
+		;;
+	-*) ;;
+	*) break ;;
+	esac
+done
+
+# A GUI-launched Git Bash may not inherit the refreshed user PATH; make sure the
+# Scoop 7z shim is reachable before giving up.
+if ! command -v 7z >/dev/null 2>&1; then
+	case "$(uname -s)" in
+	MINGW* | MSYS* | CYGWIN*)
+		if [ -d "/c/Users/User/Scoop/shims" ]; then
+			PATH="/c/Users/User/Scoop/shims:$PATH"
+			export PATH
+		fi
+		;;
+	esac
+fi
 if ! command -v 7z >/dev/null 2>&1; then
 	echo "Error: 7z not found"
-	echo "Press Enter to exit..."
-	read
+	if [ "$BATCH" = 0 ]; then
+		echo "Press Enter to exit..."
+		read
+	fi
 	exit 1
 fi
 
@@ -94,6 +134,11 @@ win_path() {
 
 confirm_overwrite() {
 	dir="$1"
+	# DC batch mode: never prompt. 7z's own -y overwrites same-name files,
+	# but extra old files already in the target dir are kept. For a clean
+	# dir instead, replace the line below with:
+	#   [ "$BATCH" = 1 ] && { rm -rf "$dir" || return 1; return 0; }
+	[ "$BATCH" = 1 ] && return 0
 	if [ -d "$dir" ]; then
 		printf "Overwrite existing '%s'? [y/N]: " "$(basename "$dir")"
 		read ans
@@ -283,8 +328,11 @@ if [ $# -eq 0 ]; then
 	echo "  $(basename "$0") -a <file_or_dir1> ...           # create archive(s)"
 	echo "  $(basename "$0") --xc=gbk <archive>              # extract with codepage"
 	echo "  $(basename "$0") -o <archive>                    # open in 7-Zip FM"
-	echo "Press Enter to exit..."
-	read
+	echo "  $(basename "$0") --dc <archive> ...              # extract (DC batch mode)"
+	if [ "$BATCH" = 0 ]; then
+		echo "Press Enter to exit..."
+		read
+	fi
 	exit 1
 fi
 
@@ -304,6 +352,10 @@ while [ $# -gt 0 ]; do
 		codepage="${1#--xc=}"
 		shift
 		;;
+	--dc)
+		# BATCH / FORCE_EXTRACT were already set by the pre-scan at the top.
+		shift
+		;;
 	-o)
 		open_fm=true
 		shift
@@ -314,8 +366,10 @@ while [ $# -gt 0 ]; do
 		;;
 	-*)
 		echo "Error: Unknown option $1"
-		echo "Press Enter to exit..."
-		read
+		if [ "$BATCH" = 0 ]; then
+			echo "Press Enter to exit..."
+			read
+		fi
 		exit 1
 		;;
 	*) break ;;
@@ -324,13 +378,20 @@ done
 
 if [ $# -eq 0 ]; then
 	echo "Error: No files specified"
-	echo "Press Enter to exit..."
-	read
+	if [ "$BATCH" = 0 ]; then
+		echo "Press Enter to exit..."
+		read
+	fi
+	exit 1
+fi
+
+if [ "$BATCH" = 1 ] && [ "$mode" = "create" ]; then
+	echo "Error: --dc is extract-only (do not combine with -a)"
 	exit 1
 fi
 
 # Auto-detect: if no -a flag and none of the inputs are archives, switch to create mode
-if [ "$mode" = "extract" ] && [ "$open_fm" = false ]; then
+if [ "$mode" = "extract" ] && [ "$open_fm" = false ] && [ "$FORCE_EXTRACT" = 0 ]; then
 	all_not_archive=true
 	for f in "$@"; do
 		if is_archive "$f"; then
@@ -391,8 +452,14 @@ fi
 
 if [ $error -ne 0 ]; then
 	echo ""
-	echo "Press Enter to exit..."
-	read
+	if [ "$BATCH" = 1 ]; then
+		echo "Failed (DC batch mode)"
+	else
+		echo "Press Enter to exit..."
+		read
+	fi
+elif [ "$BATCH" = 1 ]; then
+	echo "All done."
 else
 	printf "\nAll done. "
 	read -t 3 -p "Closing in 3s..." 2>/dev/null || echo ""
