@@ -1,0 +1,14 @@
+Windows Registry Editor Version 5.00
+
+[-HKEY_CLASSES_ROOT\magnet\shell\open\command]
+[-HKEY_CLASSES_ROOT\magnet\shell\open]
+[-HKEY_CLASSES_ROOT\magnet\shell]
+
+[HKEY_CLASSES_ROOT\magnet]
+"URL Protocol"=-
+
+[HKEY_CLASSES_ROOT\.torrent]
+@=-
+"Content Type"=-
+
+[-HKEY_CLASSES_ROOT\qBittorrent]

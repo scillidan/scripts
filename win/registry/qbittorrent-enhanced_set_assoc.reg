@@ -1,0 +1,21 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\magnet]
+@="magnet"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\magnet\shell\open\command]
+@="\"%SCOOP%\qbittorrent\current\qbittorrent.exe\" \"%1\""
+
+[HKEY_CLASSES_ROOT\.torrent]
+@="qBittorrent"
+"Content Type"="application/x-bittorrent"
+
+[HKEY_CLASSES_ROOT\qBittorrent]
+@="Torrent File"
+
+[HKEY_CLASSES_ROOT\qBittorrent\DefaultIcon]
+@="\"%SCOOP%\qbittorrent\current\qbittorrent.exe\",0"
+
+[HKEY_CLASSES_ROOT\qBittorrent\shell\open\command]
+@="\"%SCOOP%\qbittorrent\current\qbittorrent.exe\" \"%1\""
