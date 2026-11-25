@@ -66,8 +66,12 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_intermixed_args()
     try:
-        files = files_from_options(args, DEFAULT_DIRECTORY, ["*.cht", "*.conf"])
-        cheats = load_cheats(files, args.comment_prefix or ["#"])
+        prefixes = args.comment_prefix or ["#"]
+        files = files_from_options(
+            args, DEFAULT_DIRECTORY, ["*.cht", "*.conf"],
+            count_line=lambda line: parse_cheat(line, prefixes) is not None,
+        )
+        cheats = load_cheats(files, prefixes)
         if not cheats:
             raise RuntimeError("No cheatsheets found")
         limit = args.max_desc_length

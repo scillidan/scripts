@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 from dataclasses import dataclass
-from typing import Iterable, Iterator
+from typing import Callable, Iterable, Iterator
 
 
 @dataclass(slots=True)
@@ -56,6 +56,7 @@ def add_common_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--print", dest="print_only", action="store_true", help="Print selected values instead of acting; with --add/--format acts as a dry run")
     parser.add_argument("--notify", action="store_true", help="Show a desktop notification after the action (not in dry-run mode)")
     parser.add_argument("--fzf-arg", action="append", default=[], metavar="ARG", help="Additional fzf argument; repeatable. Values containing spaces are split into separate argv entries; prefer --fzf-arg=KEY=VALUE")
+    parser.add_argument("--list-files", action="store_true", help="Diagnostics: list discovered files with total/valid line counts, then exit (use with --include/-d/-f/--exclude)")
 
 
 def files_from_options(
@@ -63,6 +64,7 @@ def files_from_options(
     default_directory: Path,
     default_includes: list[str],
     allow_missing: bool = False,
+    count_line: Callable[[str], bool] | None = None,
 ) -> list[str]:
     directories = args.directories
     used_default = False
@@ -75,12 +77,32 @@ def files_from_options(
             includes.append(pattern)
     if not includes:
         raise ValueError("--no-default-includes requires at least one --include GLOB")
+
+    # A glob accidentally expanded by the shell arrives as a literal filename.
+    literal = [p for p in (args.includes or []) if not any(char in p for char in GLOB_CHARS)]
+    if literal:
+        print(
+            "Warning: --include got literal filename(s) " + repr(literal)
+            + ". If you meant a glob, quote it (e.g. --include '*.txt'); use -f for one specific file.",
+            file=sys.stderr,
+        )
+
     # A missing *explicit* -d is an error. The implicit default directory (and --add,
     # which is about to create it) are allowed not to exist yet.
-    return discover_files(
+    paths = discover_files(
         args.files, directories, includes, args.excludes,
         allow_missing=allow_missing or used_default,
     )
+    if getattr(args, "list_files", False):
+        for path in paths:
+            with open(path, "r", encoding="utf-8-sig") as handle:
+                lines = [line.rstrip("\r\n") for line in handle]
+            valid = sum(1 for line in lines if count_line(line)) if count_line else 0
+            suffix = f"  valid={valid}" if count_line else ""
+            print(f"{len(lines):>6} lines{suffix}  {path}")
+        print(f"-- {len(paths)} file(s) discovered; includes={includes}; excludes={args.excludes}")
+        raise SystemExit(0)
+    return paths
 
 
 def _exclude_patterns(patterns: Iterable[str]) -> list[tuple[str, str]]:

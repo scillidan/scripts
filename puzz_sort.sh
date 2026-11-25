@@ -3,7 +3,7 @@
 # Usage:
 #   ./script.sh [option|number] [text]   (no text: clipboard; no option: menu)
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PY_SCRIPT="$SCRIPT_DIR/lib/puzz_sort.py"
 
 SORTS='

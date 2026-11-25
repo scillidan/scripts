@@ -219,7 +219,8 @@ def main() -> int:
     args = parser.parse_intermixed_args()
     try:
         files = files_from_options(
-            args, DEFAULT_DIRECTORY, ["*.bkm", "*.txt"], allow_missing=bool(args.add)
+            args, DEFAULT_DIRECTORY, ["*.bkm", "*.txt"], allow_missing=bool(args.add),
+            count_line=lambda line: parse_bookmark(line, args.comment_prefix) is not None,
         )
         scheme_openers = parse_scheme_openers(args.scheme_opener)
         if args.add:
