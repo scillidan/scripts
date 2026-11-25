@@ -37,10 +37,10 @@ def scoopwhere(path: str) -> str:
 TRANSFORMS = {
     "delspace": lambda x: re.sub(r"[\s\xa0]+", "", x),
     "delquery": lambda x: x.split("?")[0],
-    "ghcommitsatom": lambda x: re.sub(
+    "ghurlcommitsatom": lambda x: re.sub(
         GITHUB_REPO, r"https://github.com/\1/\2/commits.atom", x
     ),
-    "ghreleasesatom": lambda x: re.sub(
+    "ghurlreleasesatom": lambda x: re.sub(
         GITHUB_REPO, r"https://github.com/\1/\2/releases.atom", x
     ),
     "ghurlapi": ghurlapi,
