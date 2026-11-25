@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 """Sort clipboard lines: alphabetical, by length, reversed.
 
-Ported from PuzzTools _SORTS (Keypirinha plugin, transforms.py).
 Text given on the command line replaces the clipboard; the result is printed (and also
 copied to the clipboard when one is available).
+
+Inspired by https://github.com/EhsanKia/Keypirinha-PuzzTools.
 
 Usage: python puzz_sort.py <alphabetical|length|reverse> [text]
 """
@@ -17,7 +17,7 @@ if sys.platform == "win32":
     for stream in (sys.stdin, sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
 
-OPS = {
+SORTS = {
     "alphabetical": lambda lines: list(sorted(lines)),
     "length": lambda lines: list(sorted(lines, key=len)),
     "reverse": lambda lines: list(reversed(lines)),
@@ -26,7 +26,7 @@ OPS = {
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sort clipboard lines.")
-    parser.add_argument("op", choices=sorted(OPS))
+    parser.add_argument("sort", choices=sorted(SORTS))
     parser.add_argument(
         "text", nargs="?", default=None, help="input text (default: clipboard)"
     )
@@ -38,13 +38,13 @@ def main() -> int:
     lines = text.split("\n")
     if len(lines) > 1 and lines[-1] == "":  # trailing line break, same as the original
         lines.pop()
-    result = "\n".join(OPS[args.op](lines))
+    result = "\n".join(SORTS[args.sort](lines))
     set_clipboard(result)
 
     if args.quiet:
         print(result)
     else:
-        print(f"Puzz Sort: {args.op}, {len(result)} chars")
+        print(f"Puzz Sort: {args.sort}, {len(result)} chars")
         print(result)
     return 0
 

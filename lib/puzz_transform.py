@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
-"""Convert clipboard URLs/paths (github api/atom/raw/ghcli, unix/windows paths, typst, misc).
+"""Convert clipboard text.
 
-Ported from PuzzTools _TOOLS (Keypirinha plugin, transforms.py).
 Text given on the command line replaces the clipboard; the result is printed (and also
 copied to the clipboard when one is available).
 
-Usage: python puzz_tool.py <tool> [text]
+Inspired by https://github.com/EhsanKia/Keypirinha-PuzzTools.
+
+Usage: python puzz_transform.py <option> [text]
 """
 
 import argparse
@@ -28,19 +28,13 @@ def ghurlapi(text: str) -> str:
     )
 
 
-def typstsearch(text: str) -> str:
-    """.../packages/preview/wordometer/1.0.0 -> universe search for wordometer (no match: search for "")"""
-    match = re.search(r"packages/preview/(.+?)/", text)
-    return "https://typst.app/universe/search/?q=" + (match[1] if match else "")
-
-
 def scoopwhere(path: str) -> str:
-    """C:\\Users\\me\\Scoop\\shims\\fzf.exe -> C:\\Users\\me\\Scoop\\apps\\fzf\\current\\fzf.exe"""
+    """C:\\Users\\User\\Scoop\\shims\\fzf.exe -> C:\\Users\\User\\Scoop\\apps\\fzf\\current\\fzf.exe"""
     leaf = re.split(r"\\", path)[-1]
     return path.replace("\\shims\\", "\\apps\\").replace(".exe", f"\\current\\{leaf}")
 
 
-TOOLS = {
+TRANSFORMS = {
     "delspace": lambda x: re.sub(r"[\s\xa0]+", "", x),
     "delquery": lambda x: x.split("?")[0],
     "ghcommitsatom": lambda x: re.sub(
@@ -58,7 +52,6 @@ TOOLS = {
     "ghurlshorter": lambda x: re.sub(GITHUB_REPO, r"\1/\2", x),
     "linessplitbycomma": lambda x: ", ".join(x.splitlines()).lower(),
     "scoopwhere": scoopwhere,
-    "typstsearch": typstsearch,
     "unixlink": lambda x: x.replace("\\", "/"),
     "unixlink2": lambda x: x.replace("\\\\", "/"),
     "windowslink": lambda x: x.replace("/", "\\"),
@@ -68,7 +61,7 @@ TOOLS = {
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Convert clipboard URLs and paths.")
-    parser.add_argument("tool", choices=sorted(TOOLS))
+    parser.add_argument("transform", choices=sorted(TRANSFORMS))
     parser.add_argument(
         "text", nargs="?", default=None, help="input text (default: clipboard)"
     )
@@ -76,13 +69,13 @@ def main() -> int:
     args = parser.parse_args()
 
     text = args.text if args.text is not None else get_clipboard()
-    result = str(TOOLS[args.tool](text.rstrip("\r\n")))
+    result = str(TRANSFORMS[args.transform](text.rstrip("\r\n")))
     set_clipboard(result)
 
     if args.quiet:
         print(result)
     else:
-        print(f"Puzz Tool: {args.tool}, {len(result)} chars")
+        print(f"Puzz Transform: {args.transform}, {len(result)} chars")
         print(result)
     return 0
 
