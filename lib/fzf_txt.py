@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import codecs
 import fnmatch
 import os
 from pathlib import Path
@@ -23,55 +25,107 @@ class Entry:
     value: str
 
 
+GLOB_CHARS = frozenset("*?[")
+
+
+def nonnegative_int(value: str) -> int:
+    try:
+        number = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("expected a non-negative integer") from exc
+    if number < 0:
+        raise argparse.ArgumentTypeError("expected a non-negative integer, got " + value)
+    return number
+
+
 def expand_path(value: str) -> str:
     return os.path.expandvars(os.path.expanduser(value))
 
 
 def add_common_options(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("query", nargs="*", help="Initial fzf query")
-    parser.add_argument("-f", "--file", dest="files", action="append", default=[], help="Input file; repeatable")
-    parser.add_argument("-d", "--directory", dest="directories", action="append", default=[], help="Recursive input directory; repeatable")
-    parser.add_argument("--include", dest="includes", action="append", metavar="GLOB", help="Included filename glob; repeatable")
-    parser.add_argument("--exclude", dest="excludes", action="append", default=[], metavar="GLOB", help="Excluded filename glob, or NAME/ for a directory; repeatable")
+    parser.add_argument("query", nargs="*", help="Initial fzf query (may be mixed with options; use -- to start a query with a dash)")
+    parser.add_argument("-f", "--file", dest="files", action="append", default=[], help="Input file; repeatable. Still subject to --exclude, but exempt from --include globs")
+    parser.add_argument("-d", "--directory", dest="directories", action="append", default=[], help="Recursive input directory; repeatable. A missing directory is an error")
+    parser.add_argument("--include", dest="includes", action="append", metavar="GLOB", help="Additional filename glob; repeatable. Adds to the defaults; use --no-default-includes to replace them")
+    parser.add_argument("--no-default-includes", action="store_true", help="Make --include replace (instead of extend) the default filename globs")
+    parser.add_argument("--exclude", dest="excludes", action="append", default=[], metavar="GLOB", help="Excluded name: a glob, a bare NAME (matches NAME, NAME* and any directory named NAME), or NAME/ (directory only); repeatable")
     parser.add_argument("--exact", action="store_true", help="Use exact substring matching instead of fuzzy matching")
     parser.add_argument("--multi", action="store_true", help="Allow multiple selections")
     parser.add_argument("--no-sort", action="store_true", help="Preserve input order instead of fzf ranking")
-    parser.add_argument("--max-desc-length", type=int, default=50, metavar="N", help="Description character limit; 0 disables truncation")
-    parser.add_argument("--print", dest="print_only", action="store_true", help="Print selected values instead of executing an action")
-    parser.add_argument("--notify", action="store_true", help="Show a desktop notification after an action")
-    parser.add_argument("--fzf-arg", action="append", default=[], metavar="ARG", help="Additional fzf argument; repeatable")
+    parser.add_argument("--max-desc-length", type=nonnegative_int, default=50, metavar="N", help="Per-field character limit for every displayed field (title, URL, tags, shortcut); 0 disables truncation")
+    parser.add_argument("--print", dest="print_only", action="store_true", help="Print selected values instead of acting; with --add/--format acts as a dry run")
+    parser.add_argument("--notify", action="store_true", help="Show a desktop notification after the action (not in dry-run mode)")
+    parser.add_argument("--fzf-arg", action="append", default=[], metavar="ARG", help="Additional fzf argument; repeatable. Values containing spaces are split into separate argv entries; prefer --fzf-arg=KEY=VALUE")
 
 
-def files_from_options(args: argparse.Namespace, default_directory: Path, default_includes: list[str]) -> list[str]:
+def files_from_options(
+    args: argparse.Namespace,
+    default_directory: Path,
+    default_includes: list[str],
+    allow_missing: bool = False,
+) -> list[str]:
     directories = args.directories
+    used_default = False
     if not args.files and not directories:
         directories = [str(default_directory)]
+        used_default = True
+    includes: list[str] = [] if args.no_default_includes else list(default_includes)
+    for pattern in args.includes or []:
+        if pattern.casefold() not in {existing.casefold() for existing in includes}:
+            includes.append(pattern)
+    if not includes:
+        raise ValueError("--no-default-includes requires at least one --include GLOB")
+    # A missing *explicit* -d is an error. The implicit default directory (and --add,
+    # which is about to create it) are allowed not to exist yet.
     return discover_files(
-        args.files,
-        directories,
-        args.includes or default_includes,
-        args.excludes,
+        args.files, directories, includes, args.excludes,
+        allow_missing=allow_missing or used_default,
     )
 
 
-def excluded(path: str, patterns: Iterable[str]) -> bool:
-    normalized = os.path.normpath(path).casefold().replace("\\", "/")
-    basename = os.path.basename(normalized)
+def _exclude_patterns(patterns: Iterable[str]) -> list[tuple[str, str]]:
+    parsed: list[tuple[str, str]] = []
     for pattern in patterns:
         pattern = pattern.strip().casefold()
         if not pattern:
             continue
         if pattern.endswith("/"):
-            if pattern.rstrip("/") in normalized.split("/"):
+            parsed.append(("dir", pattern.rstrip("/")))
+        elif any(char in pattern for char in GLOB_CHARS):
+            parsed.append(("glob", pattern))
+        else:
+            parsed.append(("bare", pattern))
+    return parsed
+
+
+def excluded(path: str, patterns: Iterable[str]) -> bool:
+    normalized = os.path.normpath(path).casefold().replace("\\", "/")
+    basename = os.path.basename(normalized)
+    segments = normalized.split("/")
+    for kind, pattern in _exclude_patterns(patterns):
+        if kind == "dir":
+            if pattern in segments:
                 return True
-        elif fnmatch.fnmatch(basename, pattern):
-            return True
+        elif kind == "glob":
+            if fnmatch.fnmatch(basename, pattern):
+                return True
+        else:
+            # A bare name means "this file, files starting with it, or a directory named it".
+            if basename == pattern or fnmatch.fnmatch(basename, pattern + "*"):
+                return True
+            if pattern in segments[:-1]:
+                return True
     return False
 
 
 def directory_excluded(name: str, patterns: Iterable[str]) -> bool:
     name = name.casefold()
-    return any(p.strip().casefold().endswith("/") and name == p.strip().casefold().rstrip("/") for p in patterns)
+    for kind, pattern in _exclude_patterns(patterns):
+        if kind in ("dir", "bare") and name == pattern:
+            return True
+        if kind == "glob" and fnmatch.fnmatch(name, pattern):
+            return True
+    return False
 
 
 def included(name: str, patterns: Iterable[str]) -> bool:
@@ -79,7 +133,7 @@ def included(name: str, patterns: Iterable[str]) -> bool:
     return any(fnmatch.fnmatch(name, pattern.casefold()) for pattern in patterns)
 
 
-def discover_files(files: Iterable[str], directories: Iterable[str], includes: list[str], excludes: list[str]) -> list[str]:
+def discover_files(files: Iterable[str], directories: Iterable[str], includes: list[str], excludes: list[str], allow_missing: bool = False) -> list[str]:
     result: list[str] = []
     seen: set[str] = set()
 
@@ -93,11 +147,15 @@ def discover_files(files: Iterable[str], directories: Iterable[str], includes: l
         path = expand_path(raw_path)
         if not os.path.isfile(path):
             raise FileNotFoundError(f"Input file not found: {path}")
+        if excluded(path, excludes):
+            continue
         add(path)
     for raw_directory in directories:
         directory = expand_path(raw_directory)
         if not os.path.isdir(directory):
-            continue
+            if allow_missing:
+                continue
+            raise FileNotFoundError(f"Input directory not found: {directory}")
         discovered: list[str] = []
         for root, dirs, filenames in os.walk(directory):
             dirs[:] = sorted(name for name in dirs if not directory_excluded(name, excludes))
@@ -128,12 +186,32 @@ def clean_field(text: str) -> str:
     return text.replace("\t", " ").replace("\r", " ").replace("\n", " ")
 
 
+def normalize_fzf_args(values: Iterable[str]) -> list[str]:
+    """Split values containing spaces into separate argv entries (fzf wants argv, not a shell line)."""
+    result: list[str] = []
+    for value in values:
+        if not value.strip():
+            continue
+        if any(char.isspace() for char in value):
+            try:
+                parts = shlex.split(value, posix=True)
+            except ValueError:
+                parts = value.split()
+            result.extend(parts or [value])
+        else:
+            result.append(value)
+    return result
+
+
 def select(entries: list[Entry], args: argparse.Namespace, prompt: str) -> list[str]:
     if not entries:
         return []
     executable = os.environ.get("FZF_BIN", "fzf")
     if not shutil.which(executable):
         raise RuntimeError("fzf was not found; install fzf or set FZF_BIN")
+    fzf_args = normalize_fzf_args(args.fzf_arg)
+    fzf_has_multi = any(arg in ("--multi", "-m") or arg.startswith("--multi=") for arg in fzf_args)
+    multi = bool(args.multi) or fzf_has_multi
     rows = ["\t".join((clean_field(entry.display), clean_field(entry.value))) for entry in entries]
     command = [
         executable,
@@ -143,17 +221,24 @@ def select(entries: list[Entry], args: argparse.Namespace, prompt: str) -> list[
         "--delimiter=\t",
         "--with-nth=1",
         f"--prompt={prompt}",
-        "--header=Enter: select | Esc: quit" + (" | Tab: multi-select" if args.multi else ""),
+        "--header=Enter: select | Esc: quit" + (" | Tab: multi-select" if multi else ""),
         "--query=" + " ".join(args.query).strip(),
     ]
     if args.exact:
         command.append("--exact")
-    if args.multi:
+    if multi and not fzf_has_multi:
         command.append("--multi")
     if args.no_sort:
         command.append("--no-sort")
-    command.extend(args.fzf_arg)
-    process = subprocess.run(command, input="\n".join(rows) + "\n", text=True, capture_output=True)
+    command.extend(fzf_args)
+    process = subprocess.run(
+        command,
+        input="\n".join(rows) + "\n",
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+    )
     if process.returncode in (1, 130):
         return []
     if process.returncode != 0:
@@ -166,6 +251,15 @@ def select(entries: list[Entry], args: argparse.Namespace, prompt: str) -> list[
     return values
 
 
+def _merge_windows_exe(parts: list[str]) -> list[str]:
+    """Recover an unquoted Windows exe path containing spaces that shlex split apart."""
+    for index in range(len(parts), 0, -1):
+        candidate = " ".join(parts[:index])
+        if os.path.isfile(candidate) or shutil.which(candidate):
+            return [candidate] + parts[index:]
+    return parts
+
+
 def split_command(command: str) -> list[str]:
     expanded = expand_path(command)
     try:
@@ -176,11 +270,18 @@ def split_command(command: str) -> list[str]:
         parts = [part.strip('"') for part in parts]
     if not parts:
         raise RuntimeError("The command is empty")
+    if os.name == "nt":
+        parts = _merge_windows_exe(parts)
     parts[0] = expand_path(parts[0].strip('"'))
     return parts
 
 
 def launch(command: list[str]) -> None:
+    if not command:
+        raise RuntimeError("The command is empty")
+    executable = command[0]
+    if not (os.path.isfile(executable) or shutil.which(executable)):
+        raise RuntimeError(f"Executable not found: {executable}")
     options: dict = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
     if os.name == "nt":
         options["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -213,7 +314,32 @@ def open_target(target: str) -> None:
         webbrowser.open(target)
 
 
+def _powershell_set_clipboard(text: str, executable: str) -> bool:
+    """Send pure-ASCII base64 through argv so Unicode/newlines survive CP936 consoles."""
+    payload = base64.b64encode(text.encode("utf-8")).decode("ascii")
+    script = (
+        "$t=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + payload + "'));"
+        "Set-Clipboard -Value $t"
+    )
+    options: dict = {"check": True, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    if os.name == "nt":
+        options["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        subprocess.run(
+            [executable, "-NoProfile", "-NonInteractive", "-Command", script],
+            **options,
+        )
+        return True
+    except (OSError, subprocess.CalledProcessError):
+        return False
+
+
 def copy_clipboard(text: str) -> None:
+    if os.name == "nt" and _powershell_set_clipboard(text, "powershell"):
+        return
+    if os.name != "nt" and shutil.which("powershell.exe") and _powershell_set_clipboard(text, "powershell.exe"):
+        return
+
     candidates: list[list[str]] = []
     if os.name == "nt":
         candidates.append(["clip"])
@@ -229,11 +355,20 @@ def copy_clipboard(text: str) -> None:
         if not shutil.which(command[0]):
             continue
         try:
-            subprocess.run(command, input=text, text=True, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(
+                command,
+                input=text,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
             return
         except (OSError, subprocess.CalledProcessError):
             pass
-    raise RuntimeError("No clipboard tool found; use clip, pbcopy, wl-copy, xclip, or xsel")
+    raise RuntimeError("No clipboard tool found; use PowerShell Set-Clipboard, clip, pbcopy, wl-copy, xclip, or xsel")
 
 
 def notify(title: str, message: str) -> None:
@@ -265,13 +400,14 @@ def notify(title: str, message: str) -> None:
 
 
 def write_with_backup(path: str, original: str, content: str) -> bool:
+    """Write already-normalised text verbatim (newline="" avoids a second CRLF conversion)."""
     if content == original:
         return False
     backup = path + ".bak"
     try:
-        with open(backup, "w", encoding="utf-8") as handle:
+        with open(backup, "w", encoding="utf-8", newline="") as handle:
             handle.write(original)
-        with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        with open(path, "w", encoding="utf-8", newline="") as handle:
             handle.write(content)
     except OSError:
         try:

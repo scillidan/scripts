@@ -35,6 +35,7 @@ class Cheat:
 
 
 def parse_cheat(line: str, comment_prefixes: list[str]) -> Cheat | None:
+    line = line.strip()
     if not line or any(prefix and line.startswith(prefix) for prefix in comment_prefixes):
         return None
     parts = re.split(r"(?<!\\)\|", line, maxsplit=1)
@@ -56,20 +57,25 @@ def load_cheats(files: list[str], comment_prefixes: list[str]) -> list[Cheat]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     add_common_options(parser)
-    parser.add_argument("--comment-prefix", action="append", metavar="TEXT", help="Comment prefix; repeatable, default: #")
-    parser.add_argument("--unescape-pipes", action="store_true", help="Convert \\| to | before copying")
+    parser.add_argument("--comment-prefix", action="append", metavar="TEXT", help="Comment prefix; repeatable, default: #. Leading whitespace is stripped first")
+    parser.add_argument("--unescape-pipes", action="store_true", help="Convert \\| to | before copying (applies to --print too)")
     return parser
 
 
 def main() -> int:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args = parser.parse_intermixed_args()
     try:
         files = files_from_options(args, DEFAULT_DIRECTORY, ["*.cht", "*.conf"])
         cheats = load_cheats(files, args.comment_prefix or ["#"])
         if not cheats:
             raise RuntimeError("No cheatsheets found")
+        limit = args.max_desc_length
         entries = [
-            Entry(f"{truncate(cheat.description, args.max_desc_length)} - {cheat.shortcut}", cheat.shortcut)
+            Entry(
+                f"{truncate(cheat.description, limit)} - {truncate(cheat.shortcut, limit)}",
+                cheat.shortcut,
+            )
             for cheat in cheats
         ]
         selected = select(entries, args, "Cheatsheets> ")
@@ -85,7 +91,7 @@ def main() -> int:
             if args.notify:
                 notify("Cheatsheets", "Copied: " + text)
         return 0
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
