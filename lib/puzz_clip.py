@@ -11,6 +11,7 @@ history of Get-Clipboard calls when $tokens was set; Set-Clipboard does the same
 
 import base64
 import os
+import shutil
 import subprocess
 import sys
 
@@ -23,8 +24,10 @@ _PS_SET = (
 
 
 def get_clipboard() -> str:
-    """Clipboard text, '' when it holds none."""
+    """Clipboard text, '' when it holds none or no clipboard tool is available."""
     if sys.platform == "win32":
+        if not shutil.which("powershell"):
+            return ""
         out = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", _PS_GET],
             capture_output=True,
@@ -35,6 +38,8 @@ def get_clipboard() -> str:
         ["xclip", "-selection", "clipboard", "-o"],
         ["pbpaste"],
     ):
+        if not shutil.which(cmd[0]):
+            continue
         try:
             return subprocess.run(
                 cmd, capture_output=True, text=True, check=True
@@ -44,23 +49,26 @@ def get_clipboard() -> str:
     return ""
 
 
-def set_clipboard(text: str) -> None:
-    """Put text on the clipboard ('' clears it)."""
+def set_clipboard(text: str) -> bool:
+    """Try to put text on the clipboard ('' clears it); False when no tool worked."""
     if sys.platform == "win32":
         env = dict(
             os.environ,
             PUZZ_CLIP=base64.b64encode(text.encode("utf-16-le")).decode("ascii"),
         )
-        subprocess.run(
-            ["powershell", "-NoProfile", "-NonInteractive", "-Command", _PS_SET],
-            env=env,
-            check=True,
-        )
-        return
+        try:
+            subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", _PS_SET],
+                env=env,
+                check=True,
+            )
+            return True
+        except (OSError, subprocess.CalledProcessError):
+            return False
     for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["pbcopy"]):
         try:
             subprocess.run(cmd, input=text or "\n", text=True, check=True)
-            return
+            return True
         except (OSError, subprocess.CalledProcessError):
             continue
-    raise OSError("no clipboard tool available")
+    return False

@@ -2,7 +2,8 @@
 """Sort clipboard lines: alphabetical, by length, reversed.
 
 Ported from PuzzTools _SORTS (Keypirinha plugin, transforms.py).
-Text given on the command line replaces the clipboard; the result goes back to it.
+Text given on the command line replaces the clipboard; the result is printed (and also
+copied to the clipboard when one is available).
 
 Usage: python puzz_sort.py <alphabetical|length|reverse> [text]
 """
@@ -40,8 +41,11 @@ def main() -> int:
     result = "\n".join(OPS[args.op](lines))
     set_clipboard(result)
 
-    if not args.quiet:
+    if args.quiet:
+        print(result)
+    else:
         print(f"Puzz Sort: {args.op}, {len(result)} chars")
+        print(result)
     return 0
 
 

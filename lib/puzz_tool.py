@@ -2,7 +2,8 @@
 """Convert clipboard URLs/paths (github api/atom/raw/ghcli, unix/windows paths, typst, misc).
 
 Ported from PuzzTools _TOOLS (Keypirinha plugin, transforms.py).
-Text given on the command line replaces the clipboard; the result goes back to it.
+Text given on the command line replaces the clipboard; the result is printed (and also
+copied to the clipboard when one is available).
 
 Usage: python puzz_tool.py <tool> [text]
 """
@@ -78,8 +79,11 @@ def main() -> int:
     result = str(TOOLS[args.tool](text.rstrip("\r\n")))
     set_clipboard(result)
 
-    if not args.quiet:
+    if args.quiet:
+        print(result)
+    else:
         print(f"Puzz Tool: {args.tool}, {len(result)} chars")
+        print(result)
     return 0
 
 
