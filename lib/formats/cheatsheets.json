@@ -1,0 +1,15 @@
+{
+  "id": "cheatsheets",
+  "title": "Cheatsheets",
+  "includes": ["*.txt"],
+  "comment_prefixes": ["#"],
+  "rules": [
+    {
+      "match": "^(?P<left>.*?)\\s+#\\s+(?P<right>.+)$",
+      "left": "{left}",
+      "right": "{right}",
+      "value": "{right}"
+    }
+  ],
+  "action": "copy"
+}

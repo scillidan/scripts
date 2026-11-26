@@ -1,0 +1,21 @@
+{
+  "id": "commands",
+  "title": "Commands",
+  "includes": ["*.txt"],
+  "comment_prefixes": ["#"],
+  "rules": [
+    {
+      "match": "^\\s*\"(?P<left>.*)\"\\s+(?P<right>.+?)\\s*$",
+      "left": "{left}",
+      "right": "{right}",
+      "value": "{left}"
+    },
+    {
+      "match": "^\\s*\"(?P<left>.*)\"\\s*$",
+      "left": "{left}",
+      "right": "",
+      "value": "{left}"
+    }
+  ],
+  "action": "copy"
+}

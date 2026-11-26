@@ -1,0 +1,23 @@
+{
+  "id": "shortcuts",
+  "title": "Shortcuts",
+  "includes": ["*.txt"],
+  "comment_prefixes": ["#"],
+  "header": { "include": "include_groups", "exclude": "exclude" },
+  "rules": [
+    {
+      "match": "^(?P<left>.*?\\((?P<group>[^)]+)\\).*?)\\s*\\|\\s*(?P<value>.+?)\\s*$",
+      "guard": "group",
+      "left": "{left}",
+      "right": "| {value}",
+      "value": "{value}"
+    },
+    {
+      "match": "^(?P<left>.*?)\\s*\\|\\s*(?P<value>.+?)\\s*$",
+      "left": "{left}",
+      "right": "{value}",
+      "value": "{value}"
+    }
+  ],
+  "action": "copy"
+}

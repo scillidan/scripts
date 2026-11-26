@@ -1,0 +1,14 @@
+{
+  "id": "bookmarks",
+  "title": "Bookmarks",
+  "includes": ["*.txt"],
+  "comment_prefixes": ["#"],
+  "rules": [
+    {
+      "match": "^(?P<line>.*?(?P<value>\\w+://\\S+).*)$",
+      "display": "{line}",
+      "value": "{value}"
+    }
+  ],
+  "action": "open_url"
+}
