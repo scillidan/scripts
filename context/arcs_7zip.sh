@@ -1,468 +1,302 @@
 #!/bin/sh
-# Smart archive extraction/creation — intelligently decide target dir, handle passwords, nested archives
+# arcs_7zip.sh - smart extract / create. Windows (Git Bash, MSYS2, Cygwin) + Linux.
 #
-# Requirements: 7-Zip (7z)
+# Assumption: bash/sh, 7z and THIS SCRIPT are already on PATH on every machine.
+#   SEVENZ=7zz arcs_7zip.sh --dc foo.zip      # official 7-Zip for Linux
+#   SEVENZ=7za arcs_7zip.sh --dc foo.zip      # p7zip standalone
 #
-# Usage:
-#   Windows:
-#     Create a .lnk shortcut to this script in the SendTo folder, then:
-#     Select archives/files/folders > Right-click > Send To > arcs_7zip
+# CLI:
+#   arcs_7zip.sh <archive> ...       extract
+#   arcs_7zip.sh -a <item> ...       create (interactive)
+#   arcs_7zip.sh --xc=936 <archive>  extract with zip codepage (Windows-only reliable)
+#   arcs_7zip.sh -o <archive>        open in 7-Zip FM (Windows) / list archive (Linux)
+#   arcs_7zip.sh --dc <archive> ...  extract, non-interactive (Double Commander)
+#   arcs_7zip.sh --dc --list=F       read paths from a DC %L / %LQ list file
 #
-#   Linux (Thunar):
-#     Edit > Configure custom actions > Add action with command: /path/to/script.sh %F
+# Toolbar buttons - identical Params on BOTH platforms (the platform branch is
+# inside the script, driven only by uname -s):
+#   Windows DC : Command  bash.exe   (or %SCOOP%\apps\git\current\bin\bash.exe)
+#   Linux   DC : Command  bash
+#   Params     : %"0 arcs_7zip.sh --dc %p{"}{"}
+#   Start      : %D
+#   Debug      : prepend %t1 to keep the terminal open; REMOVE it when stable.
+#                (%t1 uses Windows Terminal on Win11, conhost on Win10,
+#                 xterm/gnome-terminal on Linux - a pure difference generator.)
+#   Old DC     : replace %p{"}{"} with --list=%LQ
+#   Thunar     : Configure custom actions > arcs_7zip.sh %F
 #
-#   Double Commander (toolbar button / file association, non-interactive):
-#     Command : C:\Users\User\Scoop\apps\git\current\bin\bash.exe
-#     Params  : %"0 %t1 /c/Users/User/Share/scripts/context/arcs_7zip.sh --dc %p{"}{"}
-#     Start   : %D
-#
-#   Command line:
-#     ./script.sh <archive1> <archive2> ...      # extract
-#     ./script.sh -a <file_or_dir1> ...           # create archive(s)
-#     ./script.sh --xc=gbk <archive>              # extract with codepage
-#     ./script.sh -o <archive>                    # open in 7-Zip FM
-#     ./script.sh --dc <archive1> ...             # extract, non-interactive (for DC)
-#
-#   --dc notes (extract-only; do not combine with -a):
-#     - forces extract mode, disabling the "no archive input -> create" auto-detect,
-#     - never prompts for overwrite / "Press Enter", so stdin may be a non-TTY,
-#     - prepends Scoop shims to PATH when launched by a GUI process without it.
+# Keep LF line endings. A copy from Windows onto Linux with CRLF makes
+# "#!/bin/sh^M" fail:  sed -i 's/\r$//' arcs_7zip.sh
 
-# --- DC batch flags (pre-scanned so the 7z check below can see them) ---
+# Scan ALL args and pull --dc from any position. A DC build that does not
+# consume %"0 / %t1 passes them through as literal args and would otherwise
+# push --dc off position 1, turning batch mode into an interactive read().
 BATCH=0
 FORCE_EXTRACT=0
 for _a in "$@"; do
+	[ "$_a" = "--dc" ] && { BATCH=1; FORCE_EXTRACT=1; }
+done
+_n=$#
+_i=0
+while [ "$_i" -lt "$_n" ]; do
+	_a="$1"; shift
 	case "$_a" in
-	--dc)
-		BATCH=1
-		FORCE_EXTRACT=1
-		break
-		;;
-	-*) ;;
-	*) break ;;
+	--dc | %\"[01] | %t[01]) ;;
+	*) set -- "$@" "$_a" ;;
 	esac
+	_i=$((_i + 1))
 done
 
-# A GUI-launched Git Bash may not inherit the refreshed user PATH; make sure the
-# Scoop 7z shim is reachable before giving up.
-if ! command -v 7z >/dev/null 2>&1; then
-	case "$(uname -s)" in
-	MINGW* | MSYS* | CYGWIN*)
-		if [ -d "/c/Users/User/Scoop/shims" ]; then
-			PATH="/c/Users/User/Scoop/shims:$PATH"
-			export PATH
-		fi
-		;;
-	esac
-fi
-if ! command -v 7z >/dev/null 2>&1; then
-	echo "Error: 7z not found"
-	if [ "$BATCH" = 0 ]; then
-		echo "Press Enter to exit..."
-		read
-	fi
-	exit 1
-fi
+SEVENZ=${SEVENZ:-7z}
+command -v "$SEVENZ" >/dev/null 2>&1 || { echo "Error: $SEVENZ not on PATH"; exit 1; }
 
-readonly NESTED_EXTS="7z zip rar cb7 cbr cbt cbz 001 tar gz bz2 xz lzma Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi"
-readonly ARCHIVE_EXTS="7z zip rar cb7 cbr cbt cbz 001 tar gz tgz bz2 bz2 xz txz lzma lz Z lzh cab iso wim swm esd msi dmg vhd vmdk vdi arj zst"
-readonly RECURSION_MAX=5
-readonly DEFAULT_ARCHIVE_EXT="zip"
-readonly DELETE_SOURCE_AFTER=false
+IS_WIN=0
+case "$(uname -s)" in
+MINGW* | MSYS* | CYGWIN*) IS_WIN=1 ;;
+esac
 
-delete_source() {
-	target="$1"
-	if [ ! -e "$target" ]; then
-		return 0
-	fi
-	if command -v gio >/dev/null 2>&1; then
-		gio trash "$target" 2>/dev/null
-		return $?
-	fi
-	case "$(uname -s)" in
-	MINGW* | MSYS* | CYGWIN*)
-		winpath="$target"
-		if command -v cygpath >/dev/null 2>&1; then
-			winpath=$(cygpath -w "$target")
-		fi
-		escaped=$(printf "%s" "$winpath" | sed "s/'/''/g")
-		if [ -d "$target" ]; then
-			method="DeleteDirectory"
-		else
-			method="DeleteFile"
-		fi
-		powershell -NoProfile -Command \
-			"Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::$method('$escaped','OnlyErrorDialogs','SendToRecycleBin')" 2>/dev/null
-		return $?
-		;;
-	esac
-	return 1
-}
+# Windows-style TMPDIR (C:\...) is not a writable POSIX path inside Git Bash.
+case "${TMPDIR:-}" in *:*) TMPDIR= ;; esac
+LOG="${TMPDIR:-/tmp}/arcs_7zip.$$.log"
 
-probe_archive() {
-	archive="$1"
-	7z l -slt "$(win_path "$archive")" 2>/dev/null | grep -c '^Path = '
-}
+MAX_DEPTH=5
+EXTS="7z zip rar cb7 cbr cbt cbz 001 tar gz tgz bz2 tbz2 xz txz lzma lz z lzh cab iso wim swm esd msi dmg vhd vmdk vdi arj zst"
+NESTED="7z zip rar cb7 cbr cbt cbz 001 tar gz bz2 xz lzma z lzh cab iso wim swm esd msi dmg vhd vmdk vdi"
 
-is_archive() {
-	f="$1"
-	ext=$(printf "%s" "$f" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-	for e in $ARCHIVE_EXTS; do
-		[ "$ext" = "$e" ] && return 0
-	done
-	return 1
-}
-
-# Windows/Win32 forbids these in names that 7z itself must create
-# (archive output file, extraction target dir). Source files can carry
-# them (created via POSIX/\\?\ paths), but 7z a / 7z x then fails with
-# "The filename, directory name, or volume label syntax is incorrect".
-sanitize_name() {
-	printf "%s" "$1" | sed 's/[?*<>|":/\\]/_/g'
-}
-
-# MSYS2/Cygwin skip POSIX->Windows path conversion for args containing
-# wildcard chars (* ? [ ]) — e.g. an absolute output path with [brackets]
-# reaches 7z.exe as literal '/c/...' and 7z silently does nothing (exit 0).
-# Convert explicitly so native 7z always gets a Windows path.
+# MSYS2 skips automatic POSIX->Windows conversion for args containing * ? [ ],
+# so a path with [brackets] would reach 7z.exe as literal '/c/...' and 7z
+# would silently exit 0. Explicit conversion is REQUIRED on Windows only.
+# No cygpath on Linux; fall back to the raw path if it is ever missing.
 win_path() {
-	case "$(uname -s)" in
-	MINGW* | MSYS* | CYGWIN*) cygpath -w "$1" ;;
-	*) printf "%s" "$1" ;;
-	esac
+	if [ "$IS_WIN" = 1 ]; then
+		_w=$(cygpath -w "$1" 2>/dev/null)
+		[ -n "$_w" ] && { printf '%s' "$_w"; return 0; }
+	fi
+	printf '%s' "$1"
 }
 
-confirm_overwrite() {
-	dir="$1"
-	# DC batch mode: never prompt. 7z's own -y overwrites same-name files,
-	# but extra old files already in the target dir are kept. For a clean
-	# dir instead, replace the line below with:
-	#   [ "$BATCH" = 1 ] && { rm -rf "$dir" || return 1; return 0; }
-	[ "$BATCH" = 1 ] && return 0
-	if [ -d "$dir" ]; then
-		printf "Overwrite existing '%s'? [y/N]: " "$(basename "$dir")"
-		read ans
-		case "$ans" in
-		y | Y | yes) rm -rf "$dir" ;;
-		*) return 1 ;;
-		esac
-	fi
-	return 0
+# Version-independent member count.
+# "7z l -slt" prints exactly one "Path = <archive>" header before the member
+# records on p7zip 16.02 AND on Windows 7-Zip 24.x. Counting every Path line
+# (the original bug) makes a one-file archive look like two, so two machines
+# with different 7z builds choose different target dirs and appear to differ.
+# Do NOT key off the "----------" separator: its shape varies by build.
+count_items() {
+	_n=$("$SEVENZ" l -slt "$(win_path "$1")" 2>>"$LOG" | grep -c '^Path = ')
+	_r=$(( ${_n:-0} - 1 ))
+	[ "$_r" -lt 0 ] && _r=0
+	echo "$_r"
 }
 
-extract_archive() {
-	archive="$1"
-	codepage="$2"
-	depth="${3:-0}"
+ext_is() {
+	_e=$(printf '%s' "$1" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+	for _x in $2; do
+		[ "$_e" = "$_x" ] && return 0
+	done
+	return 1
+}
+is_archive() { ext_is "$1" "$EXTS"; }
+is_nested()  { ext_is "$1" "$NESTED"; }
 
-	if [ ! -f "$archive" ]; then
-		echo "Error: File not found: $archive"
-		return 1
-	fi
+# Win32 forbids these in names 7z itself must create. On Linux they are legal
+# but normalising anyway keeps archive/target names identical on both systems.
+sanitize() { printf '%s' "$1" | sed 's|[?*<>|":/\\]|_|g'; }
 
-	item_count=$(probe_archive "$archive")
-	archive_dir=$(dirname "$archive")
-	archive_name=$(basename "$archive" | sed 's/\.[^.]*$//')
+fail() {
+	echo "Error: $1"
+	echo "  --- $SEVENZ output (last 12 lines) ---"
+	tail -n 12 "$LOG" 2>/dev/null | sed 's/^/  /'
+	echo "  --- full log: $LOG ---"
+}
 
-	if [ "${item_count:-0}" -eq 1 ]; then
-		target_dir="$archive_dir"
+extract() {
+	arc="$1"; cp="$2"; depth="${3:-0}"
+	[ -f "$arc" ] || { echo "Error: File not found: $arc"; return 1; }
+
+	: >"$LOG"
+	items=$(count_items "$arc")
+	dir=$(dirname "$arc")
+	base=$(basename "$arc" | sed 's/\.[^.]*$//')
+	if [ "${items:-0}" -eq 1 ]; then
+		out="$dir"
 	else
-		target_dir="$archive_dir/$(sanitize_name "$archive_name")"
+		out="$dir/$(sanitize "$base")"
 	fi
+	echo "Items: $items | Target: $out"
 
-	echo "Items: $item_count | Target: $target_dir"
+	# Only archives that appeared during THIS extraction count as nested.
+	# Otherwise a one-item archive (target = its own dir) would unpack and
+	# rm -f every unrelated archive sitting next to it.
+	# Unique per call: a nested extract must not overwrite/delete the list
+	# its caller is still walking in its own find | while loop.
+	PRE_SEQ=$(( ${PRE_SEQ:-0} + 1 ))
+	pre="$LOG.pre.$PRE_SEQ"
+	find "$out" -maxdepth 1 -type f 2>/dev/null >"$pre"
 
-	if ! confirm_overwrite "$target_dir"; then
-		echo "Skipped"
-		return 1
-	fi
+	cpopt=""
+	[ -n "$cp" ] && cpopt="-mcp=$cp"
 
-	cp_opts=""
-	[ -n "$codepage" ] && cp_opts="-mcp=$codepage"
-
-	if 7z x -p"" -o"$(win_path "$target_dir")" -y $cp_opts "$(win_path "$archive")" >/dev/null 2>&1; then
+	# Never send 7z output to /dev/null: that rewrote two DIFFERENT real
+	# errors into one misleading "possibly password-protected or corrupted".
+	# $cpopt unquoted on purpose: empty or exactly one switch.
+	if "$SEVENZ" x -p"" -o"$(win_path "$out")" -y $cpopt "$(win_path "$arc")" >>"$LOG" 2>&1; then
 		echo "Extracted"
-		if [ "$DELETE_SOURCE_AFTER" = true ]; then
-			delete_source "$archive" || echo "Warning: Could not move $(basename "$archive") to recycle bin"
-		fi
 	else
-		echo "Error: Failed to extract $archive (possibly password-protected or corrupted)"
+		fail "Failed to extract $arc"
+		rm -f "$pre"
 		return 1
 	fi
 
-	if [ "$depth" -lt "$RECURSION_MAX" ]; then
-		handle_nested "$target_dir" "$codepage" "$depth"
-	fi
-
+	[ "$depth" -lt "$MAX_DEPTH" ] && nested "$out" "$cp" "$depth" "$pre"
+	rm -f "$pre"
 	return 0
 }
 
-handle_nested() {
-	target_dir="$1"
-	codepage="$2"
-	depth="$3"
-	new_depth=$((depth + 1))
-
-	set --
-	for ext in $NESTED_EXTS; do
-		[ $# -gt 0 ] && set -- "$@" -o
-		set -- "$@" -name "*.$ext"
-	done
-
-	find "$target_dir" -maxdepth 1 -type f \( "$@" \) 2>/dev/null | while IFS= read -r nested; do
-		printf "  Nested: %s -> " "$(basename "$nested")"
-		if extract_archive "$nested" "$codepage" "$new_depth"; then
-			rm -f "$nested"
-			echo "  Cleaned: $(basename "$nested")"
+nested() {
+	out="$1"; cp="$2"; depth="$3"; pre="$4"
+	nd=$((depth + 1))
+	# GNU find ships with Linux AND Git Bash. No "set --" here: it would
+	# clobber the caller's "$@".
+	find "$out" -maxdepth 1 -type f 2>/dev/null | while IFS= read -r n; do
+		is_nested "$n" || continue
+		grep -Fqx "$n" "$pre" 2>/dev/null && continue
+		printf '  Nested: %s -> ' "$(basename "$n")"
+		if extract "$n" "$cp" "$nd"; then
+			rm -f "$n"
+			echo "  Cleaned"
 		else
-			echo "  Skipped: $(basename "$nested")"
+			echo "  Skipped"
 		fi
 	done
 }
 
-create_archive() {
-	item="$1"
-	outdir=$(dirname "$item" | sed 's|[/\\]$||')
-	item_base=$(basename "$item")
-	safe_base=$(sanitize_name "$item_base")
-
-	if [ -d "$item" ]; then
-		output="$outdir/${safe_base}.${DEFAULT_ARCHIVE_EXT}"
-		if [ -f "$output" ]; then
-			printf "Overwrite existing '%s'? [y/N]: " "$(basename "$output")"
+create() {
+	for item do
+		dir=$(dirname "$item" | sed 's|[/\\]$||')
+		name=$(sanitize "$(basename "$item")")
+		[ -d "$item" ] || name=$(printf '%s' "$name" | sed 's/\.[^.]*$//')
+		out="$dir/$name.zip"
+		if [ -f "$out" ]; then
+			printf "Overwrite '%s'? [y/N]: " "$(basename "$out")"
 			read ans
 			case "$ans" in
-			y | Y | yes) rm -f "$output" ;;
-			*)
-				echo "Skipped"
-				return 1
-				;;
+			y | Y | yes) rm -f "$out" ;;
+			*) echo "Skipped"; continue ;;
 			esac
 		fi
-		printf "Creating %s ... " "$(basename "$output")"
-		(cd "$item" && 7z a "$(win_path "$output")" .) >/dev/null 2>&1
+		printf 'Creating %s ... ' "$(basename "$out")"
+		: >"$LOG"
+		if [ -d "$item" ]; then
+			(cd "$item" && "$SEVENZ" a "$(win_path "$out")" .) >>"$LOG" 2>&1
+		else
+			"$SEVENZ" a "$(win_path "$out")" "$(win_path "$item")" >>"$LOG" 2>&1
+		fi
 		if [ $? -eq 0 ]; then
 			echo "OK"
-			if [ "$DELETE_SOURCE_AFTER" = true ]; then
-				delete_source "$item" || echo "Warning: Could not move $(basename "$item") to recycle bin"
-			fi
 		else
 			echo "Error"
-			return 1
-		fi
-	else
-		name_noext=$(sanitize_name "$(printf "%s" "$item_base" | sed 's/\.[^.]*$//')")
-		output="$outdir/${name_noext}.${DEFAULT_ARCHIVE_EXT}"
-		if [ -f "$output" ]; then
-			printf "Overwrite existing '%s'? [y/N]: " "$(basename "$output")"
-			read ans
-			case "$ans" in
-			y | Y | yes) rm -f "$output" ;;
-			*)
-				echo "Skipped"
-				return 1
-				;;
-			esac
-		fi
-		printf "Creating %s ... " "$(basename "$output")"
-		if 7z a "$(win_path "$output")" "$item" >/dev/null 2>&1; then
-			echo "OK"
-			if [ "$DELETE_SOURCE_AFTER" = true ]; then
-				delete_source "$item" || echo "Warning: Could not move $(basename "$item") to recycle bin"
-			fi
-		else
-			echo "Error"
-			return 1
-		fi
-	fi
-}
-
-create_combined_archive() {
-	parent_dir=$(dirname "$1" | sed 's|[/\\]$||')
-	for f in "$@"; do
-		d=$(dirname "$f" | sed 's|[/\\]$||')
-		if [ "$d" != "$parent_dir" ]; then
-			echo "Error: Files must be in the same directory"
-			return 1
+			fail "create failed for $item"
+			err=1
 		fi
 	done
-
-	parent_name=$(sanitize_name "$(basename "$parent_dir")")
-	default_name="${parent_name}.${DEFAULT_ARCHIVE_EXT}"
-	printf "Archive name [%s]: " "$default_name"
-	read given_name
-	if [ -z "$given_name" ]; then
-		given_name="$default_name"
-	fi
-	output="$parent_dir/$given_name"
-
-	if [ -f "$output" ]; then
-		printf "Overwrite existing '%s'? [y/N]: " "$(basename "$output")"
-		read ans
-		case "$ans" in
-		y | Y | yes) rm -f "$output" ;;
-		*)
-			echo "Skipped"
-			return 1
-			;;
-		esac
-	fi
-
-	printf "Creating %s ... " "$(basename "$output")"
-	if 7z a "$(win_path "$output")" "$@" >/dev/null 2>&1; then
-		echo "OK"
-		if [ "$DELETE_SOURCE_AFTER" = true ]; then
-			for f in "$@"; do
-				delete_source "$f" || echo "Warning: Could not move $(basename "$f") to recycle bin"
-			done
-		fi
-	else
-		echo "Error"
-		return 1
-	fi
 }
 
 if [ $# -eq 0 ]; then
-	echo "Usage:"
-	echo "  $(basename "$0") <archive1> ...                  # extract"
-	echo "  $(basename "$0") -a <file_or_dir1> ...           # create archive(s)"
-	echo "  $(basename "$0") --xc=gbk <archive>              # extract with codepage"
-	echo "  $(basename "$0") -o <archive>                    # open in 7-Zip FM"
-	echo "  $(basename "$0") --dc <archive> ...              # extract (DC batch mode)"
-	if [ "$BATCH" = 0 ]; then
-		echo "Press Enter to exit..."
-		read
-	fi
+	echo "Usage: $(basename "$0") [--dc|-a|--xc=CP|-o|--list=F] <files...>"
 	exit 1
 fi
 
-mode="extract"
-codepage=""
-open_fm=false
-
-# Parse leading options with shift; files stay in "$@" untouched.
-# (No eval: filenames containing ", $, ` or \ would corrupt the whole arg list.)
+mode=extract
+cp=""
+fm=0
+list=""
 while [ $# -gt 0 ]; do
 	case "$1" in
-	-a)
-		mode="create"
-		shift
-		;;
+	-a) mode=create; shift ;;
 	--xc=*)
-		codepage="${1#--xc=}"
+		cp="${1#--xc=}"
+		# Numeric code pages are the portable spelling. NOTE: -mcp is reliable
+		# on Windows 7-Zip; p7zip 16.02 silently ignores it and official 7zz on
+		# Linux depends on locale/iconv. See the notes in the answer.
+		case "$cp" in
+		gbk | GBK | gb2312 | GB2312) cp=936 ;;
+		big5 | BIG5) cp=950 ;;
+		sjis | shift-jis | SHIFT-JIS) cp=932 ;;
+		esac
 		shift
 		;;
-	--dc)
-		# BATCH / FORCE_EXTRACT were already set by the pre-scan at the top.
-		shift
-		;;
-	-o)
-		open_fm=true
-		shift
-		;;
-	--)
-		shift
-		break
-		;;
-	-*)
-		echo "Error: Unknown option $1"
-		if [ "$BATCH" = 0 ]; then
-			echo "Press Enter to exit..."
-			read
-		fi
-		exit 1
-		;;
+	--dc) shift ;;
+	--list=*) list="${1#--list=}"; shift ;;
+	-o) fm=1; shift ;;
+	--) shift; break ;;
+	-*) echo "Error: Unknown option $1"; exit 1 ;;
 	*) break ;;
 	esac
 done
 
-if [ $# -eq 0 ]; then
-	echo "Error: No files specified"
-	if [ "$BATCH" = 0 ]; then
-		echo "Press Enter to exit..."
-		read
-	fi
-	exit 1
+# Older DC cannot emit %p{"}{"}: read a %L / %LQ selection list instead.
+if [ -n "$list" ]; then
+	[ -f "$list" ] || { echo "Error: list not found: $list"; exit 1; }
+	set --
+	while IFS= read -r line || [ -n "$line" ]; do
+		line=$(printf '%s' "$line" | tr -d '\r')
+		case "$line" in
+		\"*\") line=${line#\"}; line=${line%\"} ;;
+		esac
+		[ -n "$line" ] && set -- "$@" "$line"
+	done < "$list"
 fi
 
-if [ "$BATCH" = 1 ] && [ "$mode" = "create" ]; then
-	echo "Error: --dc is extract-only (do not combine with -a)"
-	exit 1
-fi
+[ $# -gt 0 ] || { echo "Error: No files specified"; exit 1; }
+[ "$BATCH" = 1 ] && [ "$mode" = create ] && { echo "Error: --dc is extract-only"; exit 1; }
 
-# Auto-detect: if no -a flag and none of the inputs are archives, switch to create mode
-if [ "$mode" = "extract" ] && [ "$open_fm" = false ] && [ "$FORCE_EXTRACT" = 0 ]; then
-	all_not_archive=true
+# No -a and no archive-looking input -> create (disabled by --dc).
+if [ "$mode" = extract ] && [ "$fm" = 0 ] && [ "$FORCE_EXTRACT" = 0 ]; then
+	all=1
 	for f in "$@"; do
-		if is_archive "$f"; then
-			all_not_archive=false
-			break
-		fi
+		is_archive "$f" && { all=0; break; }
 	done
-	if [ "$all_not_archive" = true ]; then
-		mode="create"
-	fi
+	[ "$all" = 1 ] && mode=create
 fi
 
-total=$#
-current=0
-error=0
-
-if [ "$open_fm" = true ]; then
-	for file in "$@"; do
-		current=$((current + 1))
-		printf "[%d/%d] " "$current" "$total"
-		if ! 7z fm "$(win_path "$file")"; then
-			echo "Error: Failed to open $file"
-			error=1
-		fi
-	done
-elif [ "$mode" = "create" ]; then
-	echo "Archive mode:"
-	echo "  1) One archive per file/directory"
-	echo "  2) Single combined archive"
-	printf "Choice [1]: "
-	read create_mode
-	echo ""
-	case "${create_mode:-1}" in
-	2)
-		if ! create_combined_archive "$@"; then
-			error=1
-		fi
-		;;
-	*)
-		for item in "$@"; do
-			current=$((current + 1))
-			printf "[%d/%d] " "$current" "$total"
-			if ! create_archive "$item"; then
-				error=1
-			fi
-		done
-		;;
-	esac
-else
-	for file in "$@"; do
-		current=$((current + 1))
-		printf "[%d/%d] " "$current" "$total"
-		if ! extract_archive "$file" "$codepage" 0; then
-			error=1
-		fi
-	done
-fi
-
-if [ $error -ne 0 ]; then
-	echo ""
-	if [ "$BATCH" = 1 ]; then
-		echo "Failed (DC batch mode)"
+err=0
+if [ "$fm" = 1 ]; then
+	# 7z.exe has NO "fm" command. 7zFM.exe is Windows-only; on Linux fall
+	# back to listing the archive instead of running a missing binary.
+	if [ "$IS_WIN" = 1 ]; then
+		fmcmd=$(command -v 7zFM || command -v 7zfm || command -v 7zFM.exe || printf '7zFM')
+		for f in "$@"; do "$fmcmd" "$(win_path "$f")" || err=1; done
 	else
-		echo "Press Enter to exit..."
-		read
+		echo "Note: no 7-Zip File Manager on Linux; listing instead."
+		for f in "$@"; do "$SEVENZ" l "$(win_path "$f")" || err=1; done
+	fi
+elif [ "$mode" = create ]; then
+	[ "$BATCH" = 1 ] && { echo "Error: --dc is extract-only"; exit 1; }
+	create "$@"
+else
+	for f in "$@"; do
+		extract "$f" "$cp" 0 || err=1
+	done
+fi
+
+if [ "$err" -ne 0 ]; then
+	if [ -s "$LOG" ]; then
+		echo "Failed. Log: $LOG"
+	else
+		echo "Failed."
 	fi
 elif [ "$BATCH" = 1 ]; then
 	echo "All done."
+elif [ -t 0 ]; then
+	# dash (Debian/Ubuntu /bin/sh) has no "read -t"; bash (Git Bash) does.
+	# Silence the error there and just return immediately.
+	printf 'All done. Closing in 3s...'
+	read -r -t 3 _ 2>/dev/null || true
+	printf '\n'
 else
-	printf "\nAll done. "
-	read -t 3 -p "Closing in 3s..." 2>/dev/null || echo ""
+	echo "All done."
 fi
 
-exit $error
+# Keep the log on failure: fail() printed its path for a reason.
+[ "$err" -ne 0 ] || rm -f "$LOG"
+exit $err
